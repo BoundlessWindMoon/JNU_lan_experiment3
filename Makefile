@@ -19,8 +19,10 @@ $(BUILD_DIR)/%.cpp.o:%.cpp
 	mkdir -p $(dir $@)
 	$(CC) -c -w $< $(CXXFLAGS) $(INCLUDES) -o $@
 	
-.PHONY: clean job
+.PHONY: clean job prof
 LOG_DIR := ./log
+PROF_DIR := ./prof
+PROF:= hipprof.sh
 JOB := job.sh
 TIMESTAMP := $(shell date '+%Y-%m-%d_%H-%M-%S')
 
@@ -28,10 +30,16 @@ job:
 	mkdir -p $(LOG_DIR)
 	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(JOB) 
 
+prof:
+	mkdir -p $(PROF_DIR)
+	mkdir -p $(LOG_DIR)
+	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(PROF)
+
 clean:
 	rm -rf $(BUILD_DIR)
 
 clean-all:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(LOG_DIR)
+	rm -rf $(PROF_DIR)
 
