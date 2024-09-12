@@ -36,7 +36,8 @@ prof:
 	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(PROF)
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) 
+	rm ./*.txt
 
 clean-all:
 	rm -rf $(BUILD_DIR)
