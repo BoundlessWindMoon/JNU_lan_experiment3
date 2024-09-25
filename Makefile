@@ -22,8 +22,10 @@ $(BUILD_DIR)/%.cpp.o:%.cpp
 .PHONY: clean job prof
 LOG_DIR := ./log
 PROF_DIR := ./prof
+DUMP_DIR := ./assembly
 PROF:= hipprof.sh
 JOB := job.sh
+DUMP := objdump.sh
 TIMESTAMP := $(shell date '+%Y-%m-%d_%H-%M-%S')
 
 job:
@@ -35,6 +37,12 @@ prof:
 	mkdir -p $(LOG_DIR)
 	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(PROF)
 
+dump:
+	mkdir -p $(LOG_DIR)
+	mkdir -p $(DUMP_DIR)
+	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(DUMP)
+	
+
 clean:
 	rm -rf $(BUILD_DIR) 
 	rm ./*.txt
@@ -43,4 +51,5 @@ clean-all:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(LOG_DIR)
 	rm -rf $(PROF_DIR)
+	rm -rf $(DUMP_DIR)
 
