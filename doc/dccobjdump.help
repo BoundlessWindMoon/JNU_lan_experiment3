@@ -1,0 +1,43 @@
+OVERVIEW: A tool to disamble fat elf, extra all the kernel in .hip_fatbin section
+USAGE: dccobjdump [options]
+
+OPTIONS:
+
+Generic Options:
+
+  --help                      - Display available options (--help-hidden for more)
+  --help-list                 - Display list of available options (--help-list-hidden for more)
+  --version                   - Display the version of this program
+
+dccobjdump options:
+
+  --architecture=<string>     - Specify GPU Architecture for which information should be dumped.
+                                Allowed values for this option:  'gfx906','gfx926','gfx928'
+  --disassemble-host          - Disassemble all executable sections found in the input files for host
+  --disassembleAll            - for host: Disassemble all sections found in the input files for host
+  --disassembleZeroes         - for host: Do not skip blocks of zeroes when disassembling host
+  --extract-elf=<string>      - Extract ELF file(s) name containing <partial file name> and save as file(s).
+                                Use 'all' to extract all files. To get the list of ELF files use --list-elf option.
+  --function=<string>         - Specify names of device functions whose fat binary structures must be dumped.
+  --inputs=<string>           - [<input file>,...]
+                                Accepts executable files and hipfb files
+  --list-elf                  - List all the ELF files available in the fatbin.
+  --max-thread=<uint>         - Set the maximum number of thread dump file
+  --options-file=<string>     - Include command line options from specified file.
+  --output=<string>           - [<output file path>,...]
+  --prune                     - This option starts the prune tool
+                                use the --target to select the retained architecture.
+  --separate-functions        - Separate the code corresponding with function symbols by some
+                                new lines to let them stand out in the printed disassembly.
+  --show-all-fatbin           - Dump all fatbin sections.
+  --show-instruction-encoding - When specified, print the encoding bytes after each disassembled operation.
+  --show-kernel-descriptor    - show all the target kernel Descriptor in the input file
+  --show-kernel-metadata      - show all the target kernel metadata in the input file
+  --show-resource-usage       - Dump resource usage for each ELF.
+                                Useful in getting all the resource usage information at one place.
+  --show-sass                 - Dump AMD assembly for a fatbin file embedded in the binary.
+  --show-symbols              - show the target symbols in the input file
+  --show-target-triple        - show all the target triple in the input file
+  --symbolize-operands        - for host: Symbolize instruction operands when disassembling host
+  --target=<string>           - Specify retained architecture, Used with the --prune option
+                                Parameters can be queried from the --show-target-triple option
