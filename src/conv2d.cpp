@@ -29,9 +29,6 @@ int getkernelInfo(__in__ problem_t *problem, __out__ kernelInfo_t *kernelInfo, _
     unsigned int outh = (h - r + 2 * p) / u + 1;
     unsigned int outw = (w - s + 2 * q) / v + 1;
 
-    // pArgs->pweight_trans = problem->pweight_trans;
-    // pArgs->output_gemm_device = problem->output_gemm_device;
-    // pArgs->data_col_device = problem->data_col_device;
     pArgs->pin = problem->in;
     pArgs->pout = problem->out;
     pArgs->pweight = problem->weight;

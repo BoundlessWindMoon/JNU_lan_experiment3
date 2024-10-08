@@ -149,12 +149,6 @@ union RegisterUnion
 
 convPlanType scheduler(problem_t *problem);
 
-// unsigned int getAlgos(int n, int c, int h, int w, int k, int r, int s);
-
-// void executeConvAlogs(mykernelParamType* param);
-
-// void convolutionForward(void* param);
-
 int getParamsize(__in__ problem_t* problem, __out__ int* paramSize);
 
 int getkernelInfo(__in__ problem_t* problem, __out__  kernelInfo_t* kernelInfo, __in_out__ void* param);
@@ -176,9 +170,6 @@ void launch_gemm_128x128x8_fp32(__half * __restrict__ A, __half * __restrict__ B
 void launch_gemm_64x64x8_fp32(  __half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
     const int M, const int N, const int K);
     
-// extern "C" __global__ void im2col_kernel(const _Float16* data_im, int n, int channels, int height, int width,
-//                               int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
-//                               int output_h, int output_w, _Float16* data_col);
 
 void launch_transpose_kernel(_Float16* A, _Float16* At, int M, int K);
 
