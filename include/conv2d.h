@@ -137,14 +137,17 @@ extern "C" __global__ void myHgemmV1Aligned(__half * __restrict__ A, __half * __
     										const int M, const int N, const int K);
 extern "C" __global__ void gemm_kernel8_4(__half *d_A, __half *d_B, __half *d_C, int M, int N, int K);
 
-extern "C" __global__ void GEMM_64x64x8_v3(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
-                                        const int M, const int N, const int K);
+// extern "C" __global__ void GEMM_64x64x8_v3(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
+//                                         const int M, const int N, const int K);
+
+void launch_gemm_64x64x8_fp32(  __half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
+    const int M, const int N, const int K);
+    
 extern "C" __global__ void im2col_kernel(const _Float16* data_im, int n, int channels, int height, int width,
                               int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
                               int output_h, int output_w, _Float16* data_col);
 
 extern "C" __global__ void transposeKernel(_Float16* A, _Float16* At, int m, int k);
-// extern "C" __global__ void GEMM_MMA_NAIVE(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C,
-//                                           const int M, const int N, const int K);
+
 void launch_gemm_32x32x16_fp16(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C, const int M, const int N, const int K);
 #endif
