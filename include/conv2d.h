@@ -97,7 +97,44 @@ typedef struct mykernelParamType
     unsigned int      algo;                          //预留
     unsigned int      revs6;                          //预留
     unsigned int      revs7;                          //预留
-}mykernelParamType;         
+}mykernelParamType; 
+
+
+typedef struct convPlanType{
+    char name[32];
+    void (*conv_init)(problem_t*);
+    void (*conv_run)(mykernelParamType*);
+    void (*conv_exit)(problem_t *);
+}convPlanType;
+
+typedef struct convParamType
+{
+    unsigned int      n;                              //batch szie            
+    unsigned int      c;                              //channel number        
+    unsigned int      h;                              //数据高                
+    unsigned int      w;                              //数据宽                
+    unsigned int      k;                              //卷积核数量            
+    unsigned int      r;                              //卷积核高              
+    unsigned int      s;                              //卷积核宽              
+    unsigned int      u;                              //卷积在高方向上的步长  
+    unsigned int      v;                              //卷积在宽方向上的步长  
+    unsigned int      p;                              //卷积在高方向上的补边  
+    unsigned int      q;                              //卷积在宽方向上的补边  
+}convParamType;
+
+#define PARAM_EQUAL(ref, in) (ref.n == in.n) &&\
+                            (ref.c == in.c) &&\
+                            (ref.h == in.h) &&\
+                            (ref.w == in.w) &&\
+                            (ref.k == in.k) &&\
+                            (ref.r == in.r) &&\
+                            (ref.s == in.s) &&\
+                            (ref.u == in.u) &&\
+                            (ref.v == in.v) &&\
+                            (ref.p == in.p) &&\
+                            (ref.q == in.q)
+
+
 typedef _Float16 _Float16_8 __attribute__((ext_vector_type(8)));
 typedef _Float16 _Float16_4 __attribute__((ext_vector_type(4)));
 typedef float float4_ __attribute__((ext_vector_type(4)));
@@ -112,40 +149,38 @@ union RegisterUnion
   };
 };
 
-unsigned int getAlgos(int n, int c, int h, int w, int k, int r, int s);
+convPlanType scheduler(problem_t *problem);
+
+// unsigned int getAlgos(int n, int c, int h, int w, int k, int r, int s);
+
+// void executeConvAlogs(mykernelParamType* param);
+
+// void convolutionForward(void* param);
+
 int getParamsize(__in__ problem_t* problem, __out__ int* paramSize);
+
 int getkernelInfo(__in__ problem_t* problem, __out__  kernelInfo_t* kernelInfo, __in_out__ void* param);
-void convolutionForward(void* param);
-void executeConvAlogs(mykernelParamType* param);
+
 void launch_reshape_kernel(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
                  int n, int k, int output_h, int output_w);
+
 void launch_im2col_r_1_c_n_kernel(const _Float16* data_im_device, int n, int channels, int height, int width,
                       int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
                       _Float16* data_col_device);                 
                  
 void launch_implicit_gemm(unsigned int outh, unsigned int outw, unsigned int k, unsigned int n, mykernelParamType* param);
 
-extern "C" __global__ void directConvolution(mykernelParamType param) __attribute__((amdgpu_flat_work_group_size(1,256)));
-
-extern "C" __global__ void __launch_bounds__(1024) reshape_kernel(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
-                               			  int n, int k, int output_h, int output_w);
-extern "C" __global__ void __launch_bounds__(1024) im2col_batch_kernel(const _Float16* data_im, int n, int channels, int height, int width,
-                                    		   int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
-                                    		   int output_h, int output_w, _Float16* data_col);
-// extern "C" __global__ void myHgemmV3Aligned(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
-//     										const int M, const int N, const int K);
+// extern "C" __global__ void directConvolution(mykernelParamType param) __attribute__((amdgpu_flat_work_group_size(1,256)));
 
 void launch_gemm_128x128x8_fp32(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C, const int M, const int N, const int K);
 
-// extern "C" __global__ void GEMM_64x64x8_v3(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
-//                                         const int M, const int N, const int K);
 
 void launch_gemm_64x64x8_fp32(  __half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
     const int M, const int N, const int K);
     
-extern "C" __global__ void im2col_kernel(const _Float16* data_im, int n, int channels, int height, int width,
-                              int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
-                              int output_h, int output_w, _Float16* data_col);
+// extern "C" __global__ void im2col_kernel(const _Float16* data_im, int n, int channels, int height, int width,
+//                               int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
+//                               int output_h, int output_w, _Float16* data_col);
 
 void launch_transpose_kernel(_Float16* A, _Float16* At, int M, int K);
 
