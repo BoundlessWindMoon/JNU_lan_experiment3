@@ -144,6 +144,7 @@ extern "C" __global__ void im2col_kernel(const _Float16* data_im, int n, int cha
                               int output_h, int output_w, _Float16* data_col);
 
 extern "C" __global__ void transposeKernel(_Float16* A, _Float16* At, int m, int k);
-extern "C" __global__ void GEMM_MMA_NAIVE(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C,
-                                          const int M, const int N, const int K);
+// extern "C" __global__ void GEMM_MMA_NAIVE(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C,
+//                                           const int M, const int N, const int K);
+void launch_gemm_32x32x16_fp16(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C, const int M, const int N, const int K);
 #endif

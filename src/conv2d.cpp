@@ -1,98 +1,17 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_ext.h>
+#include <hip/hip_fp16.h>  
 #include "conv2d.h"
-#include <hip/hip_fp16.h>  // 包含FP16支持
-#include <hip/hip_ext.h>
-extern "C" __global__ void transposeKernel(_Float16* A, _Float16* At, int m, int k) {
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-    // if (row < m && col < k) {
-    At[col * m + row] = A[row * k + col];
-    // }
-}
+// extern "C" __global__ void transposeKernel(_Float16* A, _Float16* At, int m, int k) {
+//     int row = blockIdx.y * blockDim.y + threadIdx.y;
+//     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-extern "C" __global__ void GEMM_MMA_NAIVE(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C,
-                                         const int M, const int N, const int K) {
-    const int lane_id = threadIdx.x;
-    const int K_tiles = K / MMA_K;
+//     // if (row < m && col < k) {
+//     At[col * m + row] = A[row * k + col];
+//     // }
+// }
 
-    const int warp_row = blockIdx.y * MMA_M;
-    const int warp_col = blockIdx.x * MMA_N;
-    
-    __shared__ _Float16 smem[2 *MMA_K * MMA_M];
-    
-    RegisterUnion fragA, fragB;
-    float4_ fragC00, fragC01, fragC10, fragC11;
-
-    fragC00 = {0, 0, 0, 0};
-    fragC01 = {0, 0, 0, 0};
-    fragC10 = {0, 0, 0, 0};
-    fragC11 = {0, 0, 0, 0};
-    
-   #pragma unroll
-    for (int i = 0; i < K_tiles; i++) {
-	uint32_t gmem_offsetA = (i * MMA_K + (lane_id / 4)) * M + warp_row + ((lane_id & 3) << 3);
-        uint32_t gmem_offsetB = (i * MMA_K + (lane_id / 4)) * N + warp_col + ((lane_id & 3) << 3);
-        uint32_t lds_write_offset = lane_id << 3;
-        uint32_t lds_read_A_offset = (lane_id << 3) * sizeof(_Float16);
-        uint32_t lds_read_B_offset = lds_read_A_offset + 16 * 32 * sizeof(_Float16);
-        
-        *((int4 *)(&smem[lds_write_offset])) = *((int4 *)(&A[gmem_offsetA]));
-        *((int4 *)(&smem[lds_write_offset + MMA_M * MMA_K])) = *(int4 *)(&B[gmem_offsetB]);
-			/*
-        smem[lds_write_offset + 0] = A[gmem_offsetA + 0];
-        smem[lds_write_offset + 1] = A[gmem_offsetA + 1];
-        smem[lds_write_offset + 2] = A[gmem_offsetA + 2];
-        smem[lds_write_offset + 3] = A[gmem_offsetA + 3];
-        smem[lds_write_offset + 4] = A[gmem_offsetA + 4];
-        smem[lds_write_offset + 5] = A[gmem_offsetA + 5];
-        smem[lds_write_offset + 6] = A[gmem_offsetA + 6];
-        smem[lds_write_offset + 7] = A[gmem_offsetA + 7];
-
-        smem[lds_write_offset + MMA_M * MMA_K + 0] = B[gmem_offsetB + 0];
-        smem[lds_write_offset + MMA_M * MMA_K + 1] = B[gmem_offsetB + 1];
-        smem[lds_write_offset + MMA_M * MMA_K + 2] = B[gmem_offsetB + 2];
-        smem[lds_write_offset + MMA_M * MMA_K + 3] = B[gmem_offsetB + 3];
-        smem[lds_write_offset + MMA_M * MMA_K + 4] = B[gmem_offsetB + 4];
-        smem[lds_write_offset + MMA_M * MMA_K + 5] = B[gmem_offsetB + 5];
-        smem[lds_write_offset + MMA_M * MMA_K + 6] = B[gmem_offsetB + 6];
-        smem[lds_write_offset + MMA_M * MMA_K + 7] = B[gmem_offsetB + 7];*/
-
-        asm volatile("s_waitcnt lgkmcnt(0)\n\t");
-        asm volatile("ds_read_m32x16_b16 %0, %1 offset:0\n\t": "+v"(fragA.vector8), "+v"(lds_read_A_offset));
-        asm volatile("ds_read_m32x16_b16 %0, %1 offset:0\n\t": "+v"(fragB.vector8), "+v"(lds_read_B_offset));
-        asm volatile("s_waitcnt lgkmcnt(0)\n\t");
-
-        asm volatile("v_mmac_f32_16x16x16_f16 %0, %1, %2, %0\n\t":"+v"(fragC00), "+v"(fragA.vector_front), "+v"(fragB.vector_front));
-        asm volatile("v_mmac_f32_16x16x16_f16 %0, %1, %2, %0\n\t":"+v"(fragC01), "+v"(fragA.vector_rear), "+v"(fragB.vector_front));
-        asm volatile("v_mmac_f32_16x16x16_f16 %0, %1, %2, %0\n\t":"+v"(fragC10), "+v"(fragA.vector_front), "+v"(fragB.vector_rear));
-        asm volatile("v_mmac_f32_16x16x16_f16 %0, %1, %2, %0\n\t":"+v"(fragC11), "+v"(fragA.vector_rear), "+v"(fragB.vector_rear));
-    }
-
-    
-    uint32_t output_row = blockIdx.y * MMA_M + (lane_id & 15);
-    uint32_t output_col = blockIdx.x * MMA_N + (lane_id >> 4);
-    C[N * output_row + output_col] = fragC00.x;
-    C[N * output_row + output_col + 4] = fragC00.y;
-    C[N * output_row + output_col + 8] = fragC00.z;
-    C[N * output_row + output_col + 12] = fragC00.w;
-
-    C[N * (output_row + 16) + output_col] = fragC01.x;
-    C[N * (output_row + 16) + output_col + 4] = fragC01.y;
-    C[N * (output_row + 16) + output_col + 8] = fragC01.z;
-    C[N * (output_row + 16) + output_col + 12] = fragC01.w;
-
-    C[N * output_row + output_col + 16 ] = fragC10.x;
-    C[N * output_row + output_col + 16 + 4] = fragC10.y;
-    C[N * output_row + output_col + 16 + 8] = fragC10.z;
-    C[N * output_row + output_col + 16 + 12] = fragC10.w;
-
-    C[N * (output_row + 16) + output_col + 16] = fragC11.x;
-    C[N * (output_row + 16) + output_col + 16 + 4] = fragC11.y;
-    C[N * (output_row + 16) + output_col + 16 + 8] = fragC11.z;
-    C[N * (output_row + 16) + output_col + 16 + 12] = fragC11.w;
-}
 
 extern "C" __global__ void GEMM_64x64x8_v3(
     __half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
@@ -1246,6 +1165,8 @@ int getkernelInfo(__in__ problem_t* problem, __out__ kernelInfo_t* kernelInfo, _
     pArgs->Ow = outw;
     return 0;
 }
+
+
 void executeConvAlgos(mykernelParamType* param) {
 
     unsigned int n = param->n;
@@ -1333,8 +1254,8 @@ void executeConvAlgos(mykernelParamType* param) {
         unsigned int N = outh * outw * n;
         unsigned int K = c * r * s;
         im2col_batch_hip(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
-  	transposeKernel<<<dim3((K + 15) / 16, (M + 15) / 16),dim3(16, 16)>>>(param->pweight, param->pweight_trans, M, K);
-        GEMM_MMA_NAIVE<<<dim3(N / MMA_N, M / MMA_M), dim3(64)>>>(param->pweight_trans, param->data_col_device, param->output_gemm_device, M, N, K);
+  	    transposeKernel<<<dim3((K + 15) / 16, (M + 15) / 16),dim3(16, 16)>>>(param->pweight, param->pweight_trans, M, K);
+        launch_gemm_32x32x16_fp16(param->pweight_trans, param->data_col_device, param->output_gemm_device, M, N, K);
         reshape_hip(param->output_gemm_device, param->pout, n, k, outh, outw);        
     }
 }
