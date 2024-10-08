@@ -3,13 +3,19 @@
 #include <hip/hip_runtime.h>
 #include "conv2d.h"
 
-extern "C" __global__ void transpose_kernel(_Float16* A, _Float16* At, int m, int k) {
+extern "C" __global__ void transpose_kernel(_Float16* A, _Float16* At, int M, int K) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-    // if (row < m && col < k) {
-    At[col * m + row] = A[row * k + col];
+    // if (row < M && col < K) {
+    At[col * M + row] = A[row * K + col];
     // }
+}
+
+void launch_transpose_kernel(_Float16* A, _Float16* At, int M, int K) {
+    dim3 grid((K + 15) / 16, (M + 15) / 16);
+    dim3 block(16, 16);
+    transpose_kernel <<<grid, block>>> (A, At, M, K);
 }
 
 

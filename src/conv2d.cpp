@@ -787,11 +787,8 @@ void executeConvAlgos(mykernelParamType* param) {
 
         launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
     } else if(algo == MMA_NAIVE) {
-        unsigned int M = k;
-        unsigned int N = outh * outw * n;
-        unsigned int K = c * r * s;
         launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
-  	    transpose_kernel<<<dim3((K + 15) / 16, (M + 15) / 16),dim3(16, 16)>>>(param->pweight, param->pweight_trans, M, K);
+        launch_transpose_kernel(param->pweight, param->pweight_trans, M, K);
         launch_gemm_32x32x16_fp16(param->pweight_trans, param->data_col_device, param->output_gemm_device, M, N, K);
         launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);        
     }
