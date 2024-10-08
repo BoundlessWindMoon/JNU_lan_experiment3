@@ -50,7 +50,7 @@ void launch_reshape_kernel(const _Float16* output_gemm_device, _Float16* output_
 
 }
 
-extern "C" __global__ void im2col_r_1_c_n_kernel(const _Float16* data_im, int n, int channels, int height, int width,
+extern "C" __global__ __launch_bounds__(1024) void im2col_r_1_c_n_kernel(const _Float16* data_im, int n, int channels, int height, int width,
                                     int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
                                     int output_h, int output_w, _Float16* data_col) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
