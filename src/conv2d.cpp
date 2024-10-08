@@ -15,7 +15,6 @@ int getkernelInfo(__in__ problem_t *problem, __out__ kernelInfo_t *kernelInfo, _
 {
 
     mykernelParamType *pArgs = (mykernelParamType *)param;
-    // unsigned int algo = problem->algo;
     unsigned int n = problem->n;
     unsigned int c = problem->c;
     unsigned int h = problem->h;
@@ -30,13 +29,12 @@ int getkernelInfo(__in__ problem_t *problem, __out__ kernelInfo_t *kernelInfo, _
     unsigned int outh = (h - r + 2 * p) / u + 1;
     unsigned int outw = (w - s + 2 * q) / v + 1;
 
+    // pArgs->pweight_trans = problem->pweight_trans;
+    // pArgs->output_gemm_device = problem->output_gemm_device;
+    // pArgs->data_col_device = problem->data_col_device;
     pArgs->pin = problem->in;
-    pArgs->pweight = problem->weight;
-    pArgs->pweight_trans = problem->weight_trans;
     pArgs->pout = problem->out;
-    pArgs->data_col_device = problem->data_col_device;
-    pArgs->output_gemm_device = problem->output_gemm_device;
-    // pArgs->algo = algo;
+    pArgs->pweight = problem->weight;
     pArgs->n = n;
     pArgs->c = c;
     pArgs->h = h;

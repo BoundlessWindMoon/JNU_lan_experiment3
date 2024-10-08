@@ -27,12 +27,12 @@
 
 typedef struct
 {
-    _Float16*   in;                             //输入数据地址
-    _Float16*   weight;                         //权值数据地址
-    _Float16*   weight_trans;
-    _Float16*   out;                            //输出数据地址
+    _Float16*   pweight_trans;
     _Float16*   data_col_device;
     _Float16*   output_gemm_device;
+    _Float16*   in;                             //输入数据地址
+    _Float16*   weight;                         //权值数据地址
+    _Float16*   out;                            //输出数据地址
     unsigned int      n;                              //batch szie              default value 1
     unsigned int      c;                              //channel number          default value 32
     unsigned int      h;                              //数据高                  default value 32
@@ -44,7 +44,6 @@ typedef struct
     unsigned int      v;                              //卷积在宽方向上的步长     default value 1
     unsigned int      p;                              //卷积在高方向上的补边     default value 0
     unsigned int      q;                              //卷积在宽方向上的补边     default value 0
-    unsigned int      algo;
 }problem_t;
 
 typedef struct
@@ -75,12 +74,12 @@ typedef struct
 
 typedef struct mykernelParamType
 {
-    _Float16*         pin;                            //输入数据地址
-    _Float16*         pweight;                        //权值数据地址
     _Float16*         pweight_trans;
-    _Float16*         pout;                           //输出数据地址
-    _Float16*         data_col_device;                          //预留
+    _Float16*         data_col_device;                       
     _Float16*         output_gemm_device;
+    _Float16*         pin;                            //输入数据地址
+    _Float16*         pout;                           //输出数据地址
+    _Float16*         pweight;                        //权值数据地址
     unsigned int      n;                              //batch szie            
     unsigned int      c;                              //channel number        
     unsigned int      h;                              //数据高                
@@ -94,7 +93,6 @@ typedef struct mykernelParamType
     unsigned int      q;                              //卷积在宽方向上的补边  
     unsigned int      Oh;                             //卷积在高方向上输出大小    
     unsigned int      Ow;                             //卷积在宽方向上输出大小
-    unsigned int      algo;                          //预留
     unsigned int      revs6;                          //预留
     unsigned int      revs7;                          //预留
 }mykernelParamType; 
@@ -102,9 +100,9 @@ typedef struct mykernelParamType
 
 typedef struct convPlanType{
     char name[32];
-    void (*conv_init)(problem_t*);
+    void (*conv_init)(mykernelParamType*);
     void (*conv_run)(mykernelParamType*);
-    void (*conv_exit)(problem_t *);
+    void (*conv_exit)(mykernelParamType*);
 }convPlanType;
 
 typedef struct convParamType

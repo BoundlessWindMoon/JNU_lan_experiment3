@@ -75,13 +75,9 @@ int main(int argc, char **argv)
     int paramSize;
     kernelInfo_t kernelInfo;
 
-    // problem.algo = algo;
-    // problem.weight_trans = pWeight_trans;
-    // problem.data_col_device = data_col_device;
-    // problem.output_gemm_device = output_gemm_device;
     problem.in = pIn_device;
-    problem.weight = pWeight_device;
     problem.out = pOut_device;
+    problem.weight = pWeight_device;
     problem.n = n;
     problem.c = c;
     problem.h = h;
@@ -95,14 +91,14 @@ int main(int argc, char **argv)
     problem.q = q;
 
     convPlanType current_plan = scheduler(&problem);
-    current_plan.conv_init(&problem);
     /********************************** step 2****************************/
     getParamsize(&problem, &paramSize);
     printf("paramsize:%d\n", paramSize);
     void *param = malloc(paramSize);
 
     getkernelInfo(&problem, &kernelInfo, param);\
-    // convolutionForward(param);
+
+    current_plan.conv_init((mykernelParamType *)param);
     current_plan.conv_run((mykernelParamType *)param);
     hipMemcpy(pOut_host, pOut_device, n * k * outh * outw * sizeof(_Float16), hipMemcpyDeviceToHost);
 
@@ -167,6 +163,6 @@ int main(int argc, char **argv)
     //     hipFree(output_gemm_device);
     //     hipFree(pWeight_trans);
     // }
-    current_plan.conv_exit(&problem);
+    current_plan.conv_exit((mykernelParamType *)param);
     return 0;
 }
