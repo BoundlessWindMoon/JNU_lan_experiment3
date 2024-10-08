@@ -2,6 +2,7 @@
 #SBATCH -p wzidnormal
 #SBATCH -N 1
 #SBATCH -n 1
+#SBATCH -c 8
 #SBATCH --gres=dcu:1
 
 module purge

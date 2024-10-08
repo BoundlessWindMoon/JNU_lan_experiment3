@@ -5,7 +5,7 @@ SRC_DIRS := ./src
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' )
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
-CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB   --amdgpu-target=gfx928 -g
+CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB   --offload-arch=gfx928 -g
 # CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB -g
 CC=$(HIP_PATH)/bin/hipcc
 INCLUDES  += -I$(HIP_PATH)/include -I./include
