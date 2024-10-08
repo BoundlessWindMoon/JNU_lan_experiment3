@@ -24,6 +24,11 @@ final_4="2 1920 32 32 640 3 3 1 1 1 1"
 final_5="2 640 64 64 640 3 3 1 1 1 1"
 final_6="2 320 64 64 4 3 3 1 1 1 1"
 
-param=$preliminary_1
+#param=$preliminary_1
 # hipprof -o ./prof/$TIMESTAMP.csv -d ./prof --hip-trace ./build/conv2ddemo 64 256 14 14 256 3 3 1 1 1 1
-./build/conv2ddemo $param
+./conv2ddemo $preliminary_1
+./conv2ddemo $preliminary_2
+./conv2ddemo $preliminary_3
+./conv2ddemo $preliminary_4
+./conv2ddemo $preliminary_5
+./conv2ddemo $preliminary_6

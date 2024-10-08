@@ -99,18 +99,8 @@ int main(int argc, char **argv)
     printf("paramsize:%d\n", paramSize);
     void *param = malloc(paramSize);
 
-    getkernelInfo(&problem, &kernelInfo, param);
-
-    /*
-    dim3 groups(kernelInfo.blockx, kernelInfo.blocky, kernelInfo.blockz);
-    dim3 threads(kernelInfo.threadx, kernelInfo.thready, kernelInfo.threadz);
-    int ldsSize = kernelInfo.dynmicLdsSize;
-    */
-
-    /*******************************warm up and get result************************************/
-    // hipExtLaunchKernel(kernelInfo.kernelPtr,groups,threads,(void**)&param,ldsSize,0,0,0,0);
+    getkernelInfo(&problem, &kernelInfo, param);\
     convolutionForward(param);
-    // hipExtLaunchKernel(kernelInfo.kernelPtr2,groups,threads,(void**)&param,ldsSize,0,0,0,0);
     hipMemcpy(pOut_host, pOut_device, n * k * outh * outw * sizeof(_Float16), hipMemcpyDeviceToHost);
 
     /*******************************cost time test************************************/
@@ -124,7 +114,6 @@ int main(int argc, char **argv)
     int iternum = 100;
     for (int i = 0; i < iternum; i++)
     {
-        // hipExtLaunchKernel(kernelInfo.kernelPtr,groups,threads,(void**)&param,ldsSize,0,0,0,0);
         convolutionForward(param);
     }
     hipEventRecord(stop, 0);
@@ -149,9 +138,6 @@ int main(int argc, char **argv)
             error++;
             break;
         }
-        // if(i % (n*k*outh*outw / 10) == 0) {
-        //     printf("current: postion:%d, gpuvalue:%f, cpuvalue:%f\n", i, (float)pOut_host[i], (float)pOut[i]);
-        // }
     }
     printf("================finish,error:%d=========================\n", error);
     hipFree(pIn_device);

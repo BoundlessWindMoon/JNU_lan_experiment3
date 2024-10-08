@@ -10,4 +10,4 @@ module load compiler/dtk/24.04
 
 make -j
 
-dccobjdump --inputs=./build/conv2ddemo --output=./assembly
+dccobjdump --inputs=./conv2ddemo --output=./assembly

@@ -1,4 +1,4 @@
-EXECUTABLE=conv2ddemo
+EXECUTABLE=conv2dfp16demo
 BUILD_DIR := ./build
 SRC_DIRS := ./src
 
@@ -11,8 +11,8 @@ CC=$(HIP_PATH)/bin/hipcc
 INCLUDES  += -I$(HIP_PATH)/include -I./include
 LDFLAGS =
 
-$(BUILD_DIR)/$(EXECUTABLE): $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS) -o $(BUILD_DIR)/$(EXECUTABLE)
+$(EXECUTABLE): $(OBJS)
+	$(CC) $(OBJS) $(LDFLAGS) -o $(EXECUTABLE)
       
 	
 $(BUILD_DIR)/%.cpp.o:%.cpp
@@ -52,4 +52,5 @@ clean-all:
 	rm -rf $(LOG_DIR)
 	rm -rf $(PROF_DIR)
 	rm -rf $(DUMP_DIR)
+
 
