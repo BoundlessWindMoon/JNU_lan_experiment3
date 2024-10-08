@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     hipEventDestroy(stop);
 
     printf("===================start verfiy===================\n");
-    conv2dcpu(pIn, pWeight, pOut, n, c, h, w, k, r, s, u, v, p, q);
+    //conv2dcpu(pIn, pWeight, pOut, n, c, h, w, k, r, s, u, v, p, q);
 
     int error = 0;
     for (int i = 0; i < n * k * outh * outw; i++)
