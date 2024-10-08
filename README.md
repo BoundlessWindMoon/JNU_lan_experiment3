@@ -13,6 +13,7 @@
 ```
 make job // 提交任务到任务机上运行
 make prof //提交任务到任务机，并使用hipprof分析程序
+make dump // 反汇编
 ```
 
 ## 参考资料
