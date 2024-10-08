@@ -119,7 +119,7 @@ void convolutionForward(void* param);
 void executeConvAlogs(mykernelParamType* param);
 void launch_reshape_kernel(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
                  int n, int k, int output_h, int output_w);
-void im2col_batch_hip(const _Float16* data_im_device, int n, int channels, int height, int width,
+void launch_im2col_r_1_c_n_kernel(const _Float16* data_im_device, int n, int channels, int height, int width,
                       int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
                       _Float16* data_col_device);                 
                  

@@ -609,54 +609,54 @@ extern "C" __global__ void myHgemmV3Aligned(
     }
 }
 
-extern "C" __global__ void im2col_batch_kernel(const _Float16* data_im, int n, int channels, int height, int width,
-                                    int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
-                                    int output_h, int output_w, _Float16* data_col) {
-    data_col[0] = 0.0;
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int crs = blockIdx.y;  // 展开的卷积核索引，表示 (c * r * s)
-    int c = crs / (kernel_h * kernel_w);  // 计算通道索引
-    int kh = (crs % (kernel_h * kernel_w)) / kernel_w;  // 计算卷积核的行索引
-    int kw = (crs % (kernel_h * kernel_w)) % kernel_w;  // 计算卷积核的列索引
+// extern "C" __global__ void im2col_batch_kernel(const _Float16* data_im, int n, int channels, int height, int width,
+//                                     int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
+//                                     int output_h, int output_w, _Float16* data_col) {
+//     data_col[0] = 0.0;
+//     int index = blockIdx.x * blockDim.x + threadIdx.x;
+//     int crs = blockIdx.y;  // 展开的卷积核索引，表示 (c * r * s)
+//     int c = crs / (kernel_h * kernel_w);  // 计算通道索引
+//     int kh = (crs % (kernel_h * kernel_w)) / kernel_w;  // 计算卷积核的行索引
+//     int kw = (crs % (kernel_h * kernel_w)) % kernel_w;  // 计算卷积核的列索引
 
-    if (index < n * output_h * output_w) {
-        int b = index / (output_h * output_w);  // 计算批次索引
-        int oh = (index % (output_h * output_w)) / output_w;  // 计算输出行索引
-        int ow = (index % (output_h * output_w)) % output_w;  // 计算输出列索引
+//     if (index < n * output_h * output_w) {
+//         int b = index / (output_h * output_w);  // 计算批次索引
+//         int oh = (index % (output_h * output_w)) / output_w;  // 计算输出行索引
+//         int ow = (index % (output_h * output_w)) % output_w;  // 计算输出列索引
 
-        // 计算输入矩阵中的行和列位置，考虑padding
-        int im_row = kh - pad_h + oh * stride_h;
-        int im_col = kw - pad_w + ow * stride_w;
+//         // 计算输入矩阵中的行和列位置，考虑padding
+//         int im_row = kh - pad_h + oh * stride_h;
+//         int im_col = kw - pad_w + ow * stride_w;
 
-        // 计算最终在 data_col 中的偏移
-        int offset_col = crs * n * output_h * output_w + b * output_h * output_w + oh * output_w + ow;
+//         // 计算最终在 data_col 中的偏移
+//         int offset_col = crs * n * output_h * output_w + b * output_h * output_w + oh * output_w + ow;
 
-        if (im_row >= 0 && im_row < height && im_col >= 0 && im_col < width) {
-            // 从输入矩阵中读取值并赋值到输出矩阵中
-            data_col[offset_col] = data_im[(b * channels + c) * height * width + im_row * width + im_col];
-        } else {
-            // 填充0值
-            data_col[offset_col] = 0.0;
-        }
-    }
-}
+//         if (im_row >= 0 && im_row < height && im_col >= 0 && im_col < width) {
+//             // 从输入矩阵中读取值并赋值到输出矩阵中
+//             data_col[offset_col] = data_im[(b * channels + c) * height * width + im_row * width + im_col];
+//         } else {
+//             // 填充0值
+//             data_col[offset_col] = 0.0;
+//         }
+//     }
+// }
 
-void im2col_batch_hip(const _Float16* data_im_device, int n, int channels, int height, int width,
-                      int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
-                      _Float16* data_col_device) {
-    int output_h = (height + 2 * pad_h - kernel_h) / stride_h + 1;
-    int output_w = (width + 2 * pad_w - kernel_w) / stride_w + 1;
+// void im2col_batch_hip(const _Float16* data_im_device, int n, int channels, int height, int width,
+//                       int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
+//                       _Float16* data_col_device) {
+//     int output_h = (height + 2 * pad_h - kernel_h) / stride_h + 1;
+//     int output_w = (width + 2 * pad_w - kernel_w) / stride_w + 1;
 
-    // 每个block处理1024个index
-    dim3 blockSize(1024);  // 每个block中的线程数
-    // grid的x维度为处理n * output_h * output_w的大小，y维度为crs
-    dim3 gridSize((n * output_h * output_w + blockSize.x - 1) / blockSize.x, channels * kernel_h * kernel_w);
+//     // 每个block处理1024个index
+//     dim3 blockSize(1024);  // 每个block中的线程数
+//     // grid的x维度为处理n * output_h * output_w的大小，y维度为crs
+//     dim3 gridSize((n * output_h * output_w + blockSize.x - 1) / blockSize.x, channels * kernel_h * kernel_w);
 
-    // 启动CUDA核函数
-    hipLaunchKernelGGL(im2col_batch_kernel, gridSize, blockSize, 0, 0,
-    data_im_device, n, channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, output_h, output_w, data_col_device);
+//     // 启动CUDA核函数
+//     hipLaunchKernelGGL(im2col_batch_kernel, gridSize, blockSize, 0, 0,
+//     data_im_device, n, channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, output_h, output_w, data_col_device);
 
-}
+// }
 
 
 
@@ -744,13 +744,13 @@ void executeConvAlgos(mykernelParamType* param) {
         dim3 thread1(BN / TN, BM / TM);
         dim3 group1((N + BN - 1) / BN, (M + BM - 1) / BM); 
 
-        im2col_batch_hip(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
+        launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
         myHgemmV3Aligned<<<group1, thread1>>>((__half*)param->pweight,
                                                 (__half*)param->data_col_device,
                                                 (__half*)param->output_gemm_device,
                                                 k, outh * outw * n,
                                                 c*r*s);
-        reshape_hip(param->output_gemm_device, param->pout, n, k, outh, outw);
+        launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
 
     } else if(algo == IM2COL_GEMM_NBATCH) {
 
@@ -761,22 +761,22 @@ void executeConvAlgos(mykernelParamType* param) {
     } else if(algo == WINOGRAD) {
 
     } else if(algo == IM2COL_GEMM_COMMON) {
-        im2col_batch_hip(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
-        const int TM = 4;
-        const int TN = 4;
-        const int TK = 2;
-        const int padding = 4;
-        // int thread_size = (m * n + reg_size * reg_size - 1) / (reg_size * reg_size);
-        int thread_size = min(64 * 64, M*N*K);
-        dim3 block((M + 64 - 1) / 64, (N + 64 - 1) / 64);
-        dim3 thread((64 * 64 + TM * TN - 1) / (TM * TN));
-        int shared_size = sizeof(float) * (64 * (16 + padding) + 16 * (64 + padding));
-        gemm_kernel8_4<<<block, thread, shared_size>>>((__half*)param->pweight, (__half*)param->data_col_device, (__half*)param->output_gemm_device, M, N, K);
+        // launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
+        // const int TM = 4;
+        // const int TN = 4;
+        // const int TK = 2;
+        // const int padding = 4;
+        // // int thread_size = (m * n + reg_size * reg_size - 1) / (reg_size * reg_size);
+        // int thread_size = min(64 * 64, M*N*K);
+        // dim3 block((M + 64 - 1) / 64, (N + 64 - 1) / 64);
+        // dim3 thread((64 * 64 + TM * TN - 1) / (TM * TN));
+        // int shared_size = sizeof(float) * (64 * (16 + padding) + 16 * (64 + padding));
+        // gemm_kernel8_4<<<block, thread, shared_size>>>((__half*)param->pweight, (__half*)param->data_col_device, (__half*)param->output_gemm_device, M, N, K);
 
-        reshape_hip(param->output_gemm_device, param->pout, n, k, outh, outw);
+        // launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
     } else if(algo == IM2COL_GEMM_1BATCH_64) {
 
-        im2col_batch_hip(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
+        launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
 
         // GEMM_64x64x8_v3<<<group1, thread1>>>((__half *)param->pweight,
         //                                         (__half *)param->data_col_device,
@@ -785,15 +785,15 @@ void executeConvAlgos(mykernelParamType* param) {
         //                                         c*r*s);
         launch_gemm_64x64x8_fp32((__half *)param->pweight, (__half *)param->data_col_device, (__half *)param->output_gemm_device, M, N, K);
 
-        reshape_hip(param->output_gemm_device, param->pout, n, k, outh, outw);
+        launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
     } else if(algo == MMA_NAIVE) {
         unsigned int M = k;
         unsigned int N = outh * outw * n;
         unsigned int K = c * r * s;
-        im2col_batch_hip(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
-  	    transposeKernel<<<dim3((K + 15) / 16, (M + 15) / 16),dim3(16, 16)>>>(param->pweight, param->pweight_trans, M, K);
+        launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
+  	    transpose_kernel<<<dim3((K + 15) / 16, (M + 15) / 16),dim3(16, 16)>>>(param->pweight, param->pweight_trans, M, K);
         launch_gemm_32x32x16_fp16(param->pweight_trans, param->data_col_device, param->output_gemm_device, M, N, K);
-        reshape_hip(param->output_gemm_device, param->pout, n, k, outh, outw);        
+        launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);        
     }
 }
 
