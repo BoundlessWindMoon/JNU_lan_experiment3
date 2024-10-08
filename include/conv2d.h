@@ -123,7 +123,8 @@ void launch_im2col_r_1_c_n_kernel(const _Float16* data_im_device, int n, int cha
                       int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
                       _Float16* data_col_device);                 
                  
-extern "C" __global__ void implicitGemm(mykernelParamType param);
+void launch_implicit_gemm(unsigned int outh, unsigned int outw, unsigned int k, unsigned int n, mykernelParamType* param);
+
 extern "C" __global__ void directConvolution(mykernelParamType param) __attribute__((amdgpu_flat_work_group_size(1,256)));
 
 extern "C" __global__ void __launch_bounds__(1024) reshape_kernel(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
