@@ -117,7 +117,7 @@ int getParamsize(__in__ problem_t* problem, __out__ int* paramSize);
 int getkernelInfo(__in__ problem_t* problem, __out__  kernelInfo_t* kernelInfo, __in_out__ void* param);
 void convolutionForward(void* param);
 void executeConvAlogs(mykernelParamType* param);
-void reshape_hip(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
+void launch_reshape_kernel(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
                  int n, int k, int output_h, int output_w);
 void im2col_batch_hip(const _Float16* data_im_device, int n, int channels, int height, int width,
                       int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
@@ -147,7 +147,7 @@ extern "C" __global__ void im2col_kernel(const _Float16* data_im, int n, int cha
                               int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
                               int output_h, int output_w, _Float16* data_col);
 
-extern "C" __global__ void transposeKernel(_Float16* A, _Float16* At, int m, int k);
+extern "C" __global__ void transpose_kernel(_Float16* A, _Float16* At, int m, int k);
 
 void launch_gemm_32x32x16_fp16(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C, const int M, const int N, const int K);
 #endif
