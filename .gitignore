@@ -2,4 +2,5 @@ build/
 log/
 prof/
 .vscode/
+conv2dfp16demo
 *.txt
