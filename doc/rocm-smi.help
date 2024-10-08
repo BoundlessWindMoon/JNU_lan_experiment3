@@ -1,0 +1,137 @@
+Usage: rocm-smi [options] 
+
+Description:                            The smi is hygon dcu system management interface.
+
+Optional Arguments:
+ -version --version                     Print version information and exit.
+ -h --help                              Show the help message and exit.
+ --dcureset                             Reset specified DCU (One DCU must be specified).
+ --load FILE                            Load Clock, Fan, Performance settings from FILE.
+ --save FILE                            Save Clock, Fan, Performance settings to FILE.
+ -d --device DEVICE [DEVICE DEVICE ...] Execute command on specified device.
+
+Display Options:
+ --forchip                              Display critical info in a concise format.
+ --showhw                               Show Hardware details.
+ -a --showallinfo                       Show Temperature, Fan and Clock values.
+
+Topology:
+ -i --showid                            Show DCU ID.
+ -v --showvbios                         Show VBIOS version.
+ --showdriverversion                    Show kernel driver version.
+ --showfwinfo                           Show FW information.
+ --showmemvendor                        Show DCU memory vendor.
+ --showproductname                      Show SKU/Vendor name.
+ --showserial                           Show DCU's Serial Number.
+ --showuniqueid                         Show DCU's Unique ID.
+ --showbus                              Show PCI bus number.
+
+Pages Information:
+ --showpagesinfo                        Show retired, pending and unreservable pages.
+ --showpendingpages                     Show pending pages.
+ --showretiredpages                     Show retired pages.
+ --showunreservablepages                Show unreservable pages.
+
+Hardware-related Information:
+ -f --showfan                           Show current fan speed.
+ -P --showpower                         Show current Average Graphics Package Power 
+                                        Consumption.
+ -t --showtemp                          Show current temperature.
+ -u --showuse                           Show current DCU use.
+ --showmemuse                           Show current DCU memory used.
+ --showvoltage                          Show current DCU voltage.
+
+Software-related/controlled Information:
+ -b --showbw                            Show estimated PCIe use.
+ -c --showclocks                        Show current clock frequencies.
+ -g --showdcuclocks                     Show current DCU clock frequencies.
+ -M --showmaxpower                      Show maximum graphics package power this DCU will 
+                                        consume.
+ -p --showperflevel                     Show current DPM Performance Level.
+ -s --showclkfrq                        Show supported DCU and Memory Clock.
+ --showmeminfo TYPE [TYPE TYPE ...]     Show Memory usage information for given block(s).
+ --showmemeccinfo                       Show vram memory ECC information.
+ --showmemavailable                     Show available vram memory size.
+ --showpids                             Show current running KFD PIDs.
+ --showpiddcus PID [PID PID ...]        Show DCUs used by specified KFD PIDs.
+ --showcontainermem                     Show Container VRAM usaged.
+ --showreplaycount                      Show PCIe Replay Count.
+ --showrasinfo BLOCK [BLOCK BLOCK ...]  Show RAS enablement information and error counts for the 
+                                        specified block(s).
+ --showxgmierr                          Show XGMI error information since last read.
+ --showtopo                             Show hardware topology information.
+ --showtopoweight                       Show the relative weight between DCUs.
+ --showtopohops                         Show the number of hops between DCUs.
+ --showtopotype                         Show the link type between DCUs.
+ --showtoponuma                         Show the numa nodes.
+ --showexceptioninfo                    Show the exception information.
+
+Set Options:
+ --setsclk LEVEL [LEVEL LEVEL ...]      Set DCU Clock Frequency Level (requires manual Perf 
+                                        level).
+ --setmclk LEVEL [LEVEL LEVEL ...]      Set DCU Memory Clock Frequency Level (requires manual 
+                                        Perf level).
+ --setsocclk LEVEL [LEVEL LEVEL ...]    Set SOC Clock Frequency Level (requires manual Perf 
+                                        level).
+ --setfan LEVEL                         Set DCU Fan Speed (Level or %).
+ --setperflevel LEVEL                   Set Performance Level (auto, low, high or manual).
+ --customerset CUSTOMER                 Set customer.
+ --setpoweroverdrive WATTS              Set the maximum DCU power using Power OverDrive in 
+                                        Watts.
+ --enablelowpower 1/0                   Enable/Disable the low power mode of DCU.
+ --setlowpowerdelay TIME                Set the delay time (in ms) before enter low power mode of 
+                                        DCU.
+ --rasenable BLOCK ERRTYPE              Enable RAS for specified block and error type.
+ --rasdisable BLOCK ERRTYPE             Disable RAS for specified block and error type.
+ --rasinject BLOCK                      Inject RAS poison for specified block (ONLY WORKS ON 
+                                        UNSECURE BOARDS).
+ --getmaxsclk                           Get max sclk numerical value(Mhz).
+ --getminsclk                           Get min sclk numerical value(Mhz).
+ --getmaxsocclk                         Get max socclk numerical value(Mhz).
+ --getminsocclk                         Get min socclk numerical value(Mhz).
+
+Ecc Options:
+ --setecc <value>                       Set ecc mode, there are three modes, on: ecc on, off: ecc 
+                                        off, stable: ecc off and stable.
+ --showecc                              Show ecc mode, there are three modes: ecc on, ecc off, 
+                                        ecc off and stable.
+
+Driver Load Options:
+ --loaddriver                           Load driver by manual.
+ --unloaddriver                         Unload driver by manual.
+ --setautoloaddriver <value>            Set driver auto-load upon startup. 0: auto-load off, 1: 
+                                        auto-load on.
+ --getautoloaddriver                    Get driver auto-load upon startup.
+ --setdriverparams <value>              Set parameters of driver loading.
+ --getdriverparams                      Get parameters of driver loading.
+
+Reset Options:
+ -r --resetclocks                       Reset clocks and OverDrive to default.
+ --resetfans                            Reset fans to automatic (driver) control.
+ --resetpoweroverdrive                  Set the maximum DCU power back to the device deafult 
+                                        state.
+ --resetxgmierr                         Reset XGMI error count.
+
+Auto-response Options:
+ --autorespond RESPONSE                 Response to automatically provide for all prompts (NOT 
+                                        RECOMMENDED).
+
+Output Options:
+ --loglevel LEVEL                       How much output will be printed for what program is 
+                                        doing, one of debug / info / warning / error / critical
+ --json                                 Print output in JSON format.
+ --csv                                  Print output in CSV format.
+
+Dmon Options:
+ -idmon IDMON                           Excute dmon command on specified device ID.
+ -sdmon SDMON                           Display select data to be showed, c: clocks; f: fan RPM; 
+                                        p: power and temperature; u: memory utilization.
+ -cdmon CDMON                           Display dmon for specified count.
+ -ddmon DDMON                           Display interval in seconds.
+ -odmon ODMON                           Display with date and time information.
+ -fdmon FDMON                           Log to a specified file.
+
+Console Options:
+ --index INDEX                          Appoint the device to be record.
+ --time TIME                            Record test result last time in seconds.
+ --filename FILE                        Appoint the save file name.
