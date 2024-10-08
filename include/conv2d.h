@@ -132,11 +132,10 @@ extern "C" __global__ void __launch_bounds__(1024) reshape_kernel(const _Float16
 extern "C" __global__ void __launch_bounds__(1024) im2col_batch_kernel(const _Float16* data_im, int n, int channels, int height, int width,
                                     		   int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
                                     		   int output_h, int output_w, _Float16* data_col);
-extern "C" __global__ void myHgemmV3Aligned(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
-    										const int M, const int N, const int K);
-extern "C" __global__ void myHgemmV1Aligned(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
-    										const int M, const int N, const int K);
-extern "C" __global__ void gemm_kernel8_4(__half *d_A, __half *d_B, __half *d_C, int M, int N, int K);
+// extern "C" __global__ void myHgemmV3Aligned(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
+//     										const int M, const int N, const int K);
+
+void launch_gemm_128x128x8_fp32(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C, const int M, const int N, const int K);
 
 // extern "C" __global__ void GEMM_64x64x8_v3(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
 //                                         const int M, const int N, const int K);
