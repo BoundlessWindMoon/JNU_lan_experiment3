@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     int v = atoi(argv[9]);
     int p = atoi(argv[10]);
     int q = atoi(argv[11]);
-    // printf("N:%d C:%d H:%d W:%d K:%d R:%d S:%d\n",n, c, h, w, k, r, s);
+
     int outh = (h - r + 2 * p) / u + 1;
     int outw = (w - s + 2 * q) / v + 1;
 
@@ -28,17 +28,15 @@ int main(int argc, char **argv)
     _Float16 *pWeight = (_Float16 *)malloc(k * c * r * s * sizeof(_Float16));
     _Float16 *pOut = (_Float16 *)malloc(n * k * outh * outw * sizeof(_Float16));
     _Float16 *pOut_host = (_Float16 *)malloc(n * k * outh * outw * sizeof(_Float16));
-
     _Float16 *pIn_device, *pWeight_device, *pOut_device;
     _Float16 *data_col_device, *output_gemm_device;
     _Float16 *pWeight_trans;
     hipMalloc((void **)&pIn_device, n * c * h * w * sizeof(_Float16));
     hipMalloc((void **)&pWeight_device, k * c * r * s * sizeof(_Float16));
     hipMalloc((void **)&pOut_device, n * k * outh * outw * sizeof(_Float16));
-    printf("algo %u\n", algo);
+
     if (algo == IM2COL_GEMM_1BATCH || algo == IM2COL_GEMM_1BATCH_64)
     {
-        printf("malloc memory ext memory succeed\n");
         hipMalloc((void **)&data_col_device, n * c * r * s * outh * outw * sizeof(_Float16));
         hipMalloc((void **)&output_gemm_device, n * k * outh * outw * sizeof(_Float16));
     }
@@ -125,6 +123,8 @@ int main(int argc, char **argv)
     hipEventDestroy(start);
     hipEventDestroy(stop);
 
+    free(param);
+
     printf("===================start verfiy===================\n");
     conv2dcpu(pIn, pWeight, pOut, n, c, h, w, k, r, s, u, v, p, q);
 
@@ -160,6 +160,5 @@ int main(int argc, char **argv)
         hipFree(output_gemm_device);
         hipFree(pWeight_trans);
     }
-    // free(param);*/
     return 0;
 }
