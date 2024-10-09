@@ -162,7 +162,7 @@ void launch_im2col_r_1_c_n_kernel(const _Float16* data_im_device, int n, int cha
                  
 void launch_implicit_gemm(unsigned int outh, unsigned int outw, unsigned int k, unsigned int n, mykernelParamType* param);
 
-// extern "C" __global__ void directConvolution(mykernelParamType param) __attribute__((amdgpu_flat_work_group_size(1,256)));
+extern "C" __global__ void directConvolution(mykernelParamType param) __attribute__((amdgpu_flat_work_group_size(1,256)));
 
 void launch_gemm_128x128x8_fp32(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C, const int M, const int N, const int K);
 

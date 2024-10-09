@@ -45,12 +45,14 @@ dump:
 
 clean:
 	rm -rf $(BUILD_DIR) 
-	rm ./*.txt
+	rm ./$(EXECUTABLE)
 
 clean-all:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(LOG_DIR)
 	rm -rf $(PROF_DIR)
 	rm -rf $(DUMP_DIR)
+	rm ./*.txt
+
 
 
