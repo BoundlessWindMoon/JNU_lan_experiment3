@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     hipEventDestroy(start);
     hipEventDestroy(stop);
 
-
+#ifdef CHECK
     printf("===================start verfiy===================\n");
     conv2dcpu(pIn, pWeight, pOut, n, c, h, w, k, r, s, u, v, p, q);
 
@@ -124,6 +124,8 @@ int main(int argc, char **argv)
         }
     }
     printf("================finish,error:%d=========================\n", error);
+#endif
+
     hipFree(pIn_device);
     hipFree(pWeight_device);
     hipFree(pOut_device);

@@ -4,8 +4,12 @@ SRC_DIRS := ./src
 
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' )
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB   --offload-arch=gfx928 -g 
 
-CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB   --offload-arch=gfx928 -g
+ifeq ($(CHECK),y)
+	 CXXFLAGS += -DCHECK=y
+endif
+
 # CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB -g
 CC=$(HIP_PATH)/bin/hipcc
 INCLUDES  += -I$(HIP_PATH)/include -I./include
@@ -25,8 +29,13 @@ PROF_DIR := ./prof
 DUMP_DIR := ./assembly
 PROF:= hipprof.sh
 JOB := job.sh
+COMMIT := commit.sh
 DUMP := objdump.sh
 TIMESTAMP := $(shell date '+%Y-%m-%d_%H-%M-%S')
+
+commit:
+	mkdir -p $(LOG_DIR)
+	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(COMMIT)
 
 job:
 	mkdir -p $(LOG_DIR)
