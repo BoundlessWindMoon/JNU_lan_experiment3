@@ -72,13 +72,14 @@ int main(int argc, char **argv)
     problem.p = p;
     problem.q = q;
 
-    convPlanType current_plan = scheduler(&problem);
+    
     /**********************************step 2****************************/
     getParamsize(&problem, &paramSize);
     printf("paramsize:%d\n", paramSize);
     void *param = malloc(paramSize);
 
-    getkernelInfo(&problem, &kernelInfo, param);\
+    getkernelInfo(&problem, &kernelInfo, param);
+    convPlanType current_plan = scheduler(&problem, (mykernelParamType *)param);
 
     current_plan.conv_init((mykernelParamType *)param);
     current_plan.conv_run((mykernelParamType *)param);

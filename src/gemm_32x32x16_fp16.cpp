@@ -86,8 +86,24 @@ extern "C" __global__ void gemm_32x32x16_fp16(_Float16* __restrict__ A, _Float16
     C[N * (output_row + 16) + output_col + 16 + 12] = fragC11.w;
 }
 
-void launch_gemm_32x32x16_fp16(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C, const int M, const int N, const int K) {
+void launch_gemm_32x32x16_fp16(mykernelParamType *param,
+                              int expand_row, int expand_col) {
+    
+    _Float16* A = param->pweight_trans;
+    _Float16* B = param->data_col_device;
+    _Float16* C = param->output_gemm_device;
+    int M = param->k;
+    int N = expand_col * param->Oh * param->Ow;
+    int K = param->c * param->r * param->s;
+    int span_B = K * N;
+    int span_C = M * N;
+
     dim3 grid(N / MMA_N, M / MMA_M);
     dim3 block(64);
-    gemm_32x32x16_fp16 <<<grid, block>>> (A, B, C, M, N, K);
+
+    for(int i = 0; i < expand_row; i++) 
+        gemm_32x32x16_fp16 <<<grid, block>>> (A, 
+                                            B + i * span_B, 
+                                            C + i * span_C, 
+                                            M, N, K);
 }

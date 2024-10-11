@@ -87,13 +87,13 @@ void directConvolution_run(mykernelParamType * param) {
 }
 
 void im2col_gemm_1batch_run(mykernelParamType * param) {
-    UNROLL_PARAM(param);
-    unsigned int M = k;
-    unsigned int N = n * outh * outw;
-    unsigned int K = c * r * s;
-    launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
-    launch_gemm_128x128x8_fp32((__half *)param->pweight, (__half *)param->data_col_device, (__half *)param->output_gemm_device, M, N, K);
-    launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
+    // UNROLL_PARAM(param);
+    // unsigned int M = k;
+    // unsigned int N = n * outh * outw;
+    // unsigned int K = c * r * s;
+    // launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
+    // launch_gemm_128x128x8_fp32((__half *)param->pweight, (__half *)param->data_col_device, (__half *)param->output_gemm_device, M, N, K);
+    // launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
 }
 
 void im2col_gemm_nbatch_run(mykernelParamType * param) {
@@ -112,13 +112,13 @@ void winograd_run(mykernelParamType * param) {
 }
 
 void im2col_gemm_1batch_64_run(mykernelParamType * param) {
-    UNROLL_PARAM(param);
-    unsigned int M = k;
-    unsigned int N = n * outh * outw;
-    unsigned int K = c * r * s;
-    launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
-    launch_gemm_64x64x8_fp32((__half *)param->pweight, (__half *)param->data_col_device, (__half *)param->output_gemm_device, M, N, K);
-    launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
+    // UNROLL_PARAM(param);
+    // unsigned int M = k;
+    // unsigned int N = n * outh * outw;
+    // unsigned int K = c * r * s;
+    // launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
+    // launch_gemm_64x64x8_fp32((__half *)param->pweight, (__half *)param->data_col_device, (__half *)param->output_gemm_device, M, N, K);
+    // launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
 }
 
 void mma_native_run(mykernelParamType * param) {
@@ -126,10 +126,17 @@ void mma_native_run(mykernelParamType * param) {
     unsigned int M = k;
     unsigned int N = n * outh * outw;
     unsigned int K = c * r * s;
-    launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
+    // launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
+    // launch_transpose_kernel(param->pweight, param->pweight_trans, M, K);
+    // launch_gemm_32x32x16_fp16(param->pweight_trans, param->data_col_device, param->output_gemm_device, M, N, K);
+    // launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
+
+    launch_im2col_2D_kernel(param->pin, n, c, h, w, r, s, h, w, param->expand_row, param->expand_col, param->data_col_device);
+       // launch_im2col_r_1_c_n_kernel(param->pin, n, c, h, w, r, s, p, q, u, v, param->data_col_device);
     launch_transpose_kernel(param->pweight, param->pweight_trans, M, K);
-    launch_gemm_32x32x16_fp16(param->pweight_trans, param->data_col_device, param->output_gemm_device, M, N, K);
-    launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
+    launch_gemm_32x32x16_fp16(param, param->expand_row, param->expand_col);
+        //launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
+    launch_reshape_2D_kernel(param->output_gemm_device, param->pout, n, k, outh, outw, param->expand_row, param->expand_col);
 }
 
 
@@ -147,7 +154,8 @@ void mma_native_exit(mykernelParamType * param) {
 
 convPlanType conv_plans[13] = {
     {"preliminary_1", mma_native_init, mma_native_run, mma_native_exit},
-    {"preliminary_2", im2col_gemm_1batch_init, im2col_gemm_1batch_64_run, im2col_gemm_1batch_exit},
+    {"preliminary_2", mma_native_init, mma_native_run, mma_native_exit},
+    //{"preliminary_2", im2col_gemm_1batch_init, im2col_gemm_1batch_64_run, im2col_gemm_1batch_exit},
     {"preliminary_3", mma_native_init, mma_native_run, mma_native_exit},
     {"preliminary_4", mma_native_init, mma_native_run, mma_native_exit},
     {"preliminary_5", mma_native_init, mma_native_run, mma_native_exit},
@@ -161,14 +169,38 @@ convPlanType conv_plans[13] = {
     {"umimplement", umimplement_init, umimplement_run, umimplement_exit},
 };
 
-convPlanType scheduler(problem_t *problem) {
+convPlanType scheduler(problem_t *problem, mykernelParamType * param) {
     convParamType in_param = {problem->n, problem->c, problem->h, problem->w, problem->k, problem->r, problem->s, problem->u, problem->v, problem->p, problem->q};
-    if (PARAM_EQUAL(preliminary_1, in_param)) {return conv_plans[0];}
-    if (PARAM_EQUAL(preliminary_2, in_param)) {return conv_plans[1];}
-    if (PARAM_EQUAL(preliminary_3, in_param)) {return conv_plans[2];}
-    if (PARAM_EQUAL(preliminary_4, in_param)) {return conv_plans[3];}
-    if (PARAM_EQUAL(preliminary_5, in_param)) {return conv_plans[4];}
-    if (PARAM_EQUAL(preliminary_6, in_param)) {return conv_plans[5];}
+    if (PARAM_EQUAL(preliminary_1, in_param)) {
+        param->expand_row = 2;
+        param->expand_col = param->n / 2;
+        return conv_plans[0];
+    }
+    if (PARAM_EQUAL(preliminary_2, in_param)) {
+        param->expand_row = 4;
+        param->expand_col = param->n / 4;
+        return conv_plans[1];
+    }
+    if (PARAM_EQUAL(preliminary_3, in_param)) {
+        param->expand_row = 1;
+        param->expand_col = param->n / 1;
+        return conv_plans[2];
+    }
+    if (PARAM_EQUAL(preliminary_4, in_param)) {
+        param->expand_row = 1;
+        param->expand_col = param->n / 1;
+        return conv_plans[3];
+    }
+    if (PARAM_EQUAL(preliminary_5, in_param)) {
+        param->expand_row = 1;
+        param->expand_col = param->n / 1;
+        return conv_plans[4];
+    }
+    if (PARAM_EQUAL(preliminary_6, in_param)) {
+        param->expand_row = 1;
+        param->expand_col = param->n / 1;
+        return conv_plans[5];
+    }
     if (PARAM_EQUAL(final_1, in_param)) {return conv_plans[6];}
     if (PARAM_EQUAL(final_2, in_param)) {return conv_plans[7];}
     if (PARAM_EQUAL(final_3, in_param)) {return conv_plans[8];}

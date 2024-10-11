@@ -93,6 +93,8 @@ typedef struct mykernelParamType
     unsigned int      q;                              //卷积在宽方向上的补边  
     unsigned int      Oh;                             //卷积在高方向上输出大小    
     unsigned int      Ow;                             //卷积在宽方向上输出大小
+    unsigned int      expand_row;                     //im2col 在行方向展开的次数
+    unsigned int      expand_col;                     //im2col 在列方向展开的次数
     unsigned int      revs6;                          //预留
     unsigned int      revs7;                          //预留
 }mykernelParamType; 
@@ -147,18 +149,20 @@ union RegisterUnion
   };
 };
 
-convPlanType scheduler(problem_t *problem);
+convPlanType scheduler(problem_t *problem, mykernelParamType * param);
 
 int getParamsize(__in__ problem_t* problem, __out__ int* paramSize);
 
 int getkernelInfo(__in__ problem_t* problem, __out__  kernelInfo_t* kernelInfo, __in_out__ void* param);
 
-void launch_reshape_kernel(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
-                 int n, int k, int output_h, int output_w);
+void launch_reshape_2D_kernel(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
+                 int n, int k, int output_h, int output_w,
+                 int expand_row, int expand_col);
 
-void launch_im2col_r_1_c_n_kernel(const _Float16* data_im_device, int n, int channels, int height, int width,
-                      int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h, int stride_w,
-                      _Float16* data_col_device);                 
+void launch_im2col_2D_kernel(const _Float16* data_im_device, 
+                        int n, int channels, int height, int width, int kernel_h, int kernel_w, int output_h, int output_w,
+                        int expand_row, int expand_col,
+                        _Float16* data_col_device);                
                  
 void launch_implicit_gemm(unsigned int outh, unsigned int outw, unsigned int k, unsigned int n, mykernelParamType* param);
 
@@ -173,5 +177,5 @@ void launch_gemm_64x64x8_fp32(  __half * __restrict__ A, __half * __restrict__ B
 
 void launch_transpose_kernel(_Float16* A, _Float16* At, int M, int K);
 
-void launch_gemm_32x32x16_fp16(_Float16* __restrict__ A, _Float16* __restrict__ B, _Float16* C, const int M, const int N, const int K);
+void launch_gemm_32x32x16_fp16(mykernelParamType *param, int expand_row, int expand_col);
 #endif
