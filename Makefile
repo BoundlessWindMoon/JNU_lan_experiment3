@@ -39,7 +39,7 @@ commit:
 
 test:
 	mkdir -p $(LOG_DIR)
-	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(test) 
+	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(TEST) 
 
 prof:
 	mkdir -p $(PROF_DIR)
