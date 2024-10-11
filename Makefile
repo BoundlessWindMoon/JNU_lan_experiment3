@@ -23,12 +23,12 @@ $(BUILD_DIR)/%.cpp.o:%.cpp
 	mkdir -p $(dir $@)
 	$(CC) -c -w $< $(CXXFLAGS) $(INCLUDES) -o $@
 	
-.PHONY: clean job prof
+.PHONY: clean test prof clean-all 
 LOG_DIR := ./log
 PROF_DIR := ./prof
 DUMP_DIR := ./assembly
 PROF:= hipprof.sh
-JOB := job.sh
+TEST := test.sh
 COMMIT := commit.sh
 DUMP := objdump.sh
 TIMESTAMP := $(shell date '+%Y-%m-%d_%H-%M-%S')
@@ -37,9 +37,9 @@ commit:
 	mkdir -p $(LOG_DIR)
 	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(COMMIT)
 
-job:
+test:
 	mkdir -p $(LOG_DIR)
-	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(JOB) 
+	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(test) 
 
 prof:
 	mkdir -p $(PROF_DIR)
@@ -58,10 +58,8 @@ clean:
 
 clean-all:
 	rm -rf $(BUILD_DIR)
+	rm ./$(EXECUTABLE)
 	rm -rf $(LOG_DIR)
 	rm -rf $(PROF_DIR)
 	rm -rf $(DUMP_DIR)
-	rm ./*.txt
-
-
 
