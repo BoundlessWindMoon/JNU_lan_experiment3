@@ -1,0 +1,42 @@
+Full path: /public/software/compiler/dtk-21.10/hip/bin/hipprof
+Usage:
+  hipprof [options] <app command line>
+
+Options:
+  -h - this help
+  -o <output file> - output CSV file [<result_pid>.csv]
+  -d <data directory> - to change the data directory [.]
+tracing options:
+  --hiptx-trace - to enable hipTX application code annotation trace, "Markers and Ranges" JSON trace section.
+  --hip-trace - to trace HIP, generates API execution stats and JSON file chrome-tracing compatible
+  --group-stream - to export json time line group by stream 
+
+pmc options:
+  -i <.txt|.xml file> - input file
+    Input file .txt format, automatically rerun application for every profiling features line:
+
+        # Perf counters group 1
+        pmc : Wavefronts VALUInsts SALUInsts SFetchInsts FlatVMemInsts LDSInsts FlatLDSInsts GDSInsts VALUUtilization FetchSize
+        # Perf counters group 2
+        pmc : WriteSize L2CacheHit
+        # Filter by dispatches range, GPU index and kernel names
+        # supported range formats: "3:9", "3:", "3"
+        range: 1 : 4
+        gpu: 0 1 2 3
+        kernel: simple Pass1 simpleConvolutionPass2
+
+    Input file .xml format, for single profiling run:
+
+        # Metrics list definition, also the form "<block-name>:<event-id>" can be used
+        # All defined metrics can be found in the 'metrics.xml'
+        # There are basic metrics for raw HW counters and high-level metrics for derived counters
+        <metric name=SQ:4,SQ_WAVES,VFetchInsts></metric>
+        # Filter by dispatches range, GPU index and kernel names
+        <metric 
+           # range formats: "3:9", "3:", "3"
+           range=""
+           # list of gpu indexes "0,1,2,3"
+           gpu_index=""
+           # list of matched sub-strings "Simple1,Conv1,SimpleConvolution"
+           kernel=""
+        ></metric>

@@ -18,36 +18,18 @@ int main(int argc, char **argv)
     int v = atoi(argv[9]);
     int p = atoi(argv[10]);
     int q = atoi(argv[11]);
-    // printf("N:%d C:%d H:%d W:%d K:%d R:%d S:%d\n",n, c, h, w, k, r, s);
     int outh = (h - r + 2 * p) / u + 1;
     int outw = (w - s + 2 * q) / v + 1;
 
-    unsigned int algo = getAlgos(n, c, h, w, k, r, s);
 
     _Float16 *pIn = (_Float16 *)malloc(n * c * h * w * sizeof(_Float16));
     _Float16 *pWeight = (_Float16 *)malloc(k * c * r * s * sizeof(_Float16));
     _Float16 *pOut = (_Float16 *)malloc(n * k * outh * outw * sizeof(_Float16));
     _Float16 *pOut_host = (_Float16 *)malloc(n * k * outh * outw * sizeof(_Float16));
-
     _Float16 *pIn_device, *pWeight_device, *pOut_device;
-    _Float16 *data_col_device, *output_gemm_device;
-    _Float16 *pWeight_trans;
     hipMalloc((void **)&pIn_device, n * c * h * w * sizeof(_Float16));
     hipMalloc((void **)&pWeight_device, k * c * r * s * sizeof(_Float16));
     hipMalloc((void **)&pOut_device, n * k * outh * outw * sizeof(_Float16));
-    printf("algo %u\n", algo);
-    if (algo == IM2COL_GEMM_1BATCH || algo == IM2COL_GEMM_1BATCH_64)
-    {
-        printf("malloc memory ext memory succeed\n");
-        hipMalloc((void **)&data_col_device, n * c * r * s * outh * outw * sizeof(_Float16));
-        hipMalloc((void **)&output_gemm_device, n * k * outh * outw * sizeof(_Float16));
-    }
-    else if (algo == MMA_NAIVE)
-    {
-        hipMalloc((void **)&data_col_device, n * c * r * s * outh * outw * sizeof(_Float16));
-        hipMalloc((void **)&output_gemm_device, n * k * outh * outw * sizeof(_Float16));
-        hipMalloc((void **)&pWeight_trans, k * c * r * s * sizeof(_Float16));
-    }
 
     for (int i = 0; i < n * c * h * w; i++)
     {
@@ -76,12 +58,8 @@ int main(int argc, char **argv)
     kernelInfo_t kernelInfo;
 
     problem.in = pIn_device;
-    problem.weight = pWeight_device;
-    problem.weight_trans = pWeight_trans;
     problem.out = pOut_device;
-    problem.data_col_device = data_col_device;
-    problem.output_gemm_device = output_gemm_device;
-    problem.algo = algo;
+    problem.weight = pWeight_device;
     problem.n = n;
     problem.c = c;
     problem.h = h;
@@ -94,13 +72,17 @@ int main(int argc, char **argv)
     problem.p = p;
     problem.q = q;
 
-    /********************************** step 2****************************/
+    
+    /**********************************step 2****************************/
     getParamsize(&problem, &paramSize);
     printf("paramsize:%d\n", paramSize);
     void *param = malloc(paramSize);
 
-    getkernelInfo(&problem, &kernelInfo, param);\
-    convolutionForward(param);
+    getkernelInfo(&problem, &kernelInfo, param);
+    convPlanType current_plan = scheduler(&problem, (mykernelParamType *)param);
+
+    current_plan.conv_init((mykernelParamType *)param);
+    current_plan.conv_run((mykernelParamType *)param);
     hipMemcpy(pOut_host, pOut_device, n * k * outh * outw * sizeof(_Float16), hipMemcpyDeviceToHost);
 
     /*******************************cost time test************************************/
@@ -114,7 +96,8 @@ int main(int argc, char **argv)
     int iternum = 100;
     for (int i = 0; i < iternum; i++)
     {
-        convolutionForward(param);
+        // convolutionForward((mykernelParamType *)param); 
+        current_plan.conv_run((mykernelParamType *)param);
     }
     hipEventRecord(stop, 0);
 
@@ -125,6 +108,7 @@ int main(int argc, char **argv)
     hipEventDestroy(start);
     hipEventDestroy(stop);
 
+#ifdef CHECK
     printf("===================start verfiy===================\n");
     conv2dcpu(pIn, pWeight, pOut, n, c, h, w, k, r, s, u, v, p, q);
 
@@ -140,6 +124,8 @@ int main(int argc, char **argv)
         }
     }
     printf("================finish,error:%d=========================\n", error);
+#endif
+
     hipFree(pIn_device);
     hipFree(pWeight_device);
     hipFree(pOut_device);
@@ -149,17 +135,7 @@ int main(int argc, char **argv)
     free(pOut);
     free(pOut_host);
 
-    if (algo == IM2COL_GEMM_1BATCH || algo == IM2COL_GEMM_1BATCH_64)
-    {
-        hipFree(data_col_device);
-        hipFree(output_gemm_device);
-    }
-    else if (algo == MMA_NAIVE)
-    {
-        hipFree(data_col_device);
-        hipFree(output_gemm_device);
-        hipFree(pWeight_trans);
-    }
-    // free(param);*/
+    current_plan.conv_exit((mykernelParamType *)param);
+    free(param);
     return 0;
 }

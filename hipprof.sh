@@ -26,9 +26,9 @@ final_4="2 1920 32 32 640 3 3 1 1 1 1"
 final_5="2 640 64 64 640 3 3 1 1 1 1"
 final_6="2 320 64 64 4 3 3 1 1 1 1"
 
-param=$preliminary_1
-# hipprof -o ./prof/$TIMESTAMP.csv -d ./prof --hip-trace ./build/conv2ddemo 64 256 14 14 256 3 3 1 1 1 1
-hipprof -o ./prof/$TIMESTAMP.csv -d ./prof --hip-trace --pmc ./conv2ddemo $param
-# hipprof -o ./prof/$TIMESTAMP.pmc.csv -d ./prof  ./build/conv2ddemo $param
-# hipprof -o ./prof/$TIMESTAMP.pmc-read.csv -d ./prof --pmc-read ./build/conv2ddemo $param
-# hipprof -o ./prof/$TIMESTAMP.pmc-write.csv -d ./prof --pmc-write ./build/conv2ddemo $param
+hipprof  --pmc ./conv2dfp16demo $preliminary_1 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_1.txt"
+hipprof  --pmc ./conv2dfp16demo $preliminary_2 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_2.txt"
+hipprof  --pmc ./conv2dfp16demo $preliminary_3 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_3.txt"
+hipprof  --pmc ./conv2dfp16demo $preliminary_4 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_4.txt"
+hipprof  --pmc ./conv2dfp16demo $preliminary_5 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_5.txt"
+hipprof  --pmc ./conv2dfp16demo $preliminary_6 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_6.txt"

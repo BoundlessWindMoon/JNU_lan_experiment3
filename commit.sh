@@ -8,8 +8,9 @@
 module purge
 module load compiler/dtk/24.04
 
+make clean
+make -j CHECK=y
 
-make -j
 preliminary_1="64 256 14 14 256 3 3 1 1 1 1"
 preliminary_2="256 192 14 14 192 3 3 1 1 1 1"
 preliminary_3="16 256 26 26 512 3 3 1 1 1 1"
@@ -24,11 +25,9 @@ final_4="2 1920 32 32 640 3 3 1 1 1 1"
 final_5="2 640 64 64 640 3 3 1 1 1 1"
 final_6="2 320 64 64 4 3 3 1 1 1 1"
 
-#param=$preliminary_1
-# hipprof -o ./prof/$TIMESTAMP.csv -d ./prof --hip-trace ./build/conv2ddemo 64 256 14 14 256 3 3 1 1 1 1
-./conv2ddemo $preliminary_1
-./conv2ddemo $preliminary_2
-./conv2ddemo $preliminary_3
-./conv2ddemo $preliminary_4
-./conv2ddemo $preliminary_5
-./conv2ddemo $preliminary_6
+./conv2dfp16demo $preliminary_1
+./conv2dfp16demo $preliminary_2
+./conv2dfp16demo $preliminary_3
+./conv2dfp16demo $preliminary_4
+./conv2dfp16demo $preliminary_5
+./conv2dfp16demo $preliminary_6
