@@ -70,7 +70,7 @@ void im2col_gemm_1batch_init(mykernelParamType * param) {
 }
 
 
-void mma_native_init(mykernelParamType * param) {
+void mma_naive_init(mykernelParamType * param) {
     UNROLL_PARAM(param);
     _Float16 *data_col_device, *output_gemm_device, *pWeight_trans;
     hipMalloc((void **)&data_col_device, n * c * r * s * outh * outw * sizeof(_Float16));
@@ -121,7 +121,7 @@ void im2col_gemm_1batch_64_run(mykernelParamType * param) {
     // launch_reshape_kernel(param->output_gemm_device, param->pout, n, k, outh, outw);
 }
 
-void mma_native_run(mykernelParamType * param) {
+void mma_naive_run(mykernelParamType * param) {
     UNROLL_PARAM(param);
     unsigned int M = k;
     unsigned int N = n * outh * outw;
@@ -146,20 +146,20 @@ void im2col_gemm_1batch_exit(mykernelParamType * param) {
 }
 
 
-void mma_native_exit(mykernelParamType * param) {
+void mma_naive_exit(mykernelParamType * param) {
     hipFree(param->data_col_device);
     hipFree(param->output_gemm_device);
     hipFree(param->pweight_trans);
 }
 
 convPlanType conv_plans[13] = {
-    {"preliminary_1", mma_native_init, mma_native_run, mma_native_exit},
-    {"preliminary_2", mma_native_init, mma_native_run, mma_native_exit},
+    {"preliminary_1", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"preliminary_2", mma_naive_init, mma_naive_run, mma_naive_exit},
     //{"preliminary_2", im2col_gemm_1batch_init, im2col_gemm_1batch_64_run, im2col_gemm_1batch_exit},
-    {"preliminary_3", mma_native_init, mma_native_run, mma_native_exit},
-    {"preliminary_4", mma_native_init, mma_native_run, mma_native_exit},
-    {"preliminary_5", mma_native_init, mma_native_run, mma_native_exit},
-    {"preliminary_6", mma_native_init, mma_native_run, mma_native_exit},
+    {"preliminary_3", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"preliminary_4", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"preliminary_5", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"preliminary_6", mma_naive_init, mma_naive_run, mma_naive_exit},
     {"final_1", umimplement_init, umimplement_run, umimplement_exit},
     {"final_2", umimplement_init, umimplement_run, umimplement_exit},
     {"final_3", umimplement_init, umimplement_run, umimplement_exit},
