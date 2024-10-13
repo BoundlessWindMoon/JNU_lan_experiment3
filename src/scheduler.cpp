@@ -3,6 +3,7 @@
 #include <hip/hip_fp16.h>
 #include "conv2d.h"
 #include <assert.h>
+#include <stdio.h>
 
 convParamType preliminary_1 = {64, 256, 14, 14, 256, 3, 3, 1, 1, 1, 1};
 convParamType preliminary_2 = {256, 192, 14, 14, 192, 3, 3, 1, 1, 1, 1};
@@ -43,6 +44,14 @@ convParamType final_6= {2, 320, 64, 64, 4, 3, 3, 1, 1, 1, 1};
                             unsigned int v = problem->v; \
                             unsigned int p = problem->p; \
                             unsigned int q = problem->q; 
+
+void im2col_log(problem_t *problem) {
+    UNROLL_PROBLEM(problem);
+    unsigned int outh = (h - r + 2 * p) / u + 1;
+    unsigned int outw = (w - s + 2 * q) / v + 1;
+    printf("weight: %d x %d, feature: %d x %d x %d\n", k, c*r*s, n, c*r*s, outh*outw);
+}
+
 
 
 void umimplement_init(mykernelParamType* param) {
@@ -160,52 +169,77 @@ convPlanType conv_plans[13] = {
     {"preliminary_4", mma_naive_init, mma_naive_run, mma_naive_exit},
     {"preliminary_5", mma_naive_init, mma_naive_run, mma_naive_exit},
     {"preliminary_6", mma_naive_init, mma_naive_run, mma_naive_exit},
-    {"final_1", umimplement_init, umimplement_run, umimplement_exit},
-    {"final_2", umimplement_init, umimplement_run, umimplement_exit},
-    {"final_3", umimplement_init, umimplement_run, umimplement_exit},
-    {"final_4", umimplement_init, umimplement_run, umimplement_exit},
-    {"final_5", umimplement_init, umimplement_run, umimplement_exit},
-    {"final_6", umimplement_init, umimplement_run, umimplement_exit},
+    {"final_1", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"final_2", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"final_3", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"final_4", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"final_5", mma_naive_init, mma_naive_run, mma_naive_exit},
+    {"final_6", mma_naive_init, mma_naive_run, mma_naive_exit},
     {"umimplement", umimplement_init, umimplement_run, umimplement_exit},
 };
 
 convPlanType scheduler(problem_t *problem, mykernelParamType * param) {
+    im2col_log(problem);
     convParamType in_param = {problem->n, problem->c, problem->h, problem->w, problem->k, problem->r, problem->s, problem->u, problem->v, problem->p, problem->q};
     if (PARAM_EQUAL(preliminary_1, in_param)) {
         param->expand_row = 2;
-        param->expand_col = param->n / 2;
+        param->expand_col = param->n / param->expand_row;
         return conv_plans[0];
     }
     if (PARAM_EQUAL(preliminary_2, in_param)) {
         param->expand_row = 4;
-        param->expand_col = param->n / 4;
+        param->expand_col = param->n / param->expand_row;
         return conv_plans[1];
     }
     if (PARAM_EQUAL(preliminary_3, in_param)) {
         param->expand_row = 1;
-        param->expand_col = param->n / 1;
+        param->expand_col = param->n / param->expand_row;
         return conv_plans[2];
     }
     if (PARAM_EQUAL(preliminary_4, in_param)) {
         param->expand_row = 1;
-        param->expand_col = param->n / 1;
+        param->expand_col = param->n / param->expand_row;
         return conv_plans[3];
     }
     if (PARAM_EQUAL(preliminary_5, in_param)) {
         param->expand_row = 1;
-        param->expand_col = param->n / 1;
+        param->expand_col = param->n / param->expand_row;
         return conv_plans[4];
     }
     if (PARAM_EQUAL(preliminary_6, in_param)) {
         param->expand_row = 1;
-        param->expand_col = param->n / 1;
+        param->expand_col = param->n / param->expand_row;
         return conv_plans[5];
     }
-    if (PARAM_EQUAL(final_1, in_param)) {return conv_plans[6];}
-    if (PARAM_EQUAL(final_2, in_param)) {return conv_plans[7];}
-    if (PARAM_EQUAL(final_3, in_param)) {return conv_plans[8];}
-    if (PARAM_EQUAL(final_4, in_param)) {return conv_plans[9];}
-    if (PARAM_EQUAL(final_5, in_param)) {return conv_plans[10];}
-    if (PARAM_EQUAL(final_6, in_param)) {return conv_plans[11];}
+    if (PARAM_EQUAL(final_1, in_param)) {
+        param->expand_row = 1;
+        param->expand_col = param->n / param->expand_row;
+        return conv_plans[6];
+    }
+    if (PARAM_EQUAL(final_2, in_param)) {
+        param->expand_row = 2;
+        param->expand_col = param->n / param->expand_row;
+        return conv_plans[7];
+    }
+    if (PARAM_EQUAL(final_3, in_param)) {
+        param->expand_row = 16;
+        param->expand_col = param->n / param->expand_row;
+        return conv_plans[8];
+    }
+    if (PARAM_EQUAL(final_4, in_param)) {
+        param->expand_row = 1;
+        param->expand_col = param->n / param->expand_row;
+        return conv_plans[9];
+    }
+    if (PARAM_EQUAL(final_5, in_param)) {
+        param->expand_row = 1;
+        param->expand_col = param->n / param->expand_row;
+        return conv_plans[10];
+    }
+    if (PARAM_EQUAL(final_6, in_param)) {
+        param->expand_row = 1;
+        param->expand_col = param->n / param->expand_row;
+        return conv_plans[11];
+    }
     return conv_plans[12];
 }
