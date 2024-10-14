@@ -9,7 +9,8 @@
 module purge
 module load compiler/dtk/24.04
 
-make -j
+make clean
+make -j TEST=y
 
 TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
 preliminary_1="64 256 14 14 256 3 3 1 1 1 1"
@@ -32,3 +33,10 @@ hipprof  --pmc ./conv2dfp16demo $preliminary_3 && mv pmc_results_*  "prof/${TIME
 hipprof  --pmc ./conv2dfp16demo $preliminary_4 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_4.txt"
 hipprof  --pmc ./conv2dfp16demo $preliminary_5 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_5.txt"
 hipprof  --pmc ./conv2dfp16demo $preliminary_6 && mv pmc_results_*  "prof/${TIMESTAMP}_pmc_results_preliminary_6.txt"
+
+hipprof  --hip-trace -o "prof/${TIMESTAMP}_hip_trace_preliminary_1.csv" -d prof ./conv2dfp16demo $preliminary_1
+hipprof  --hip-trace -o "prof/${TIMESTAMP}_hip_trace_preliminary_2.csv" -d prof ./conv2dfp16demo $preliminary_2
+hipprof  --hip-trace -o "prof/${TIMESTAMP}_hip_trace_preliminary_3.csv" -d prof ./conv2dfp16demo $preliminary_3
+hipprof  --hip-trace -o "prof/${TIMESTAMP}_hip_trace_preliminary_4.csv" -d prof ./conv2dfp16demo $preliminary_4
+hipprof  --hip-trace -o "prof/${TIMESTAMP}_hip_trace_preliminary_5.csv" -d prof ./conv2dfp16demo $preliminary_5
+hipprof  --hip-trace -o "prof/${TIMESTAMP}_hip_trace_preliminary_6.csv" -d prof ./conv2dfp16demo $preliminary_6

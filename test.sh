@@ -8,7 +8,7 @@
 module purge
 module load compiler/dtk/24.04
 
-
+make clean
 make -j TEST=y
 preliminary_1="64 256 14 14 256 3 3 1 1 1 1"
 preliminary_2="256 192 14 14 192 3 3 1 1 1 1"
