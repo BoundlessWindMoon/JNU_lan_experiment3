@@ -6,8 +6,8 @@ SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' )
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB   --offload-arch=gfx928 -g 
 
-ifeq ($(CHECK),y)
-	 CXXFLAGS += -DCHECK=y
+ifeq ($(TEST),y)
+	 CXXFLAGS += -DTEST=y
 endif
 
 # CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB -g
