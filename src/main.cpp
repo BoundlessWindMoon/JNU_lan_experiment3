@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     hipEventDestroy(start);
     hipEventDestroy(stop);
 
-#ifdef CHECK
+#ifndef TEST
     printf("===================start verfiy===================\n");
     conv2dcpu(pIn, pWeight, pOut, n, c, h, w, k, r, s, u, v, p, q);
 

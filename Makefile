@@ -6,8 +6,8 @@ SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' )
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB   --offload-arch=gfx928 -g 
 
-ifeq ($(CHECK),y)
-	 CXXFLAGS += -DCHECK=y
+ifeq ($(TEST),y)
+	 CXXFLAGS += -DTEST=y
 endif
 
 # CXXFLAGS += -DHIP_ROCM -DNDEBUG -DUSE_DEFAULT_STDLIB -g
@@ -26,7 +26,6 @@ $(BUILD_DIR)/%.cpp.o:%.cpp
 .PHONY: clean test prof clean-all 
 LOG_DIR := ./log
 PROF_DIR := ./prof
-DUMP_DIR := ./assembly
 PROF:= hipprof.sh
 TEST := test.sh
 COMMIT := commit.sh
@@ -48,7 +47,6 @@ prof:
 
 dump:
 	mkdir -p $(LOG_DIR)
-	mkdir -p $(DUMP_DIR)
 	sbatch -o $(LOG_DIR)/$(TIMESTAMP) $(DUMP)
 	
 
@@ -61,5 +59,4 @@ clean-all:
 	rm ./$(EXECUTABLE)
 	rm -rf $(LOG_DIR)
 	rm -rf $(PROF_DIR)
-	rm -rf $(DUMP_DIR)
 

@@ -8,6 +8,6 @@
 module purge
 module load compiler/dtk/24.04
 
-make -j
+make -j TEST=y
 
-dccobjdump --inputs=./conv2ddemo --output=./assembly
+dccobjdump --inputs=./conv2dfp16demo --architecture=gfx928 --output=./build
