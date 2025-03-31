@@ -1,10 +1,8 @@
-#include <hip/hip_runtime.h>
-#include <hip/hip_ext.h>
-#include <hip/hip_fp16.h>
+#include <cuda_runtime.h>
 #include "conv2d.h"
 
 /*选手自己实现的kernel*/
-extern "C" __global__ void directConvolution(mykernelParamType param) __attribute__((amdgpu_flat_work_group_size(1, 256)))
+extern "C" __global__ void directConvolution(mykernelParamType param) 
 {
 
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -43,7 +41,7 @@ extern "C" __global__ void directConvolution(mykernelParamType param) __attribut
                 int weiOffsetTmp = weiOffset;
                 for (int channel = 0; channel < param.c; channel++)
                 {
-                    sum += (float)(param.pin[inOffsetTmp + i * param.w + j] * param.pweight[weiOffsetTmp + i * param.s + j]);
+                    sum += (param.pin[inOffsetTmp + i * param.w + j] * param.pweight[weiOffsetTmp + i * param.s + j]);
                     inOffsetTmp += inChannelOffset;
                     weiOffsetTmp += weightChannelOffset;
                 }
@@ -53,5 +51,5 @@ extern "C" __global__ void directConvolution(mykernelParamType param) __attribut
 
     // 计算输出偏移
     int outOffset = z * param.k * param.Oh * param.Ow + y * param.Oh * param.Ow + x;
-    param.pout[outOffset] = (_Float16)sum;
+    param.pout[outOffset] = sum;
 }

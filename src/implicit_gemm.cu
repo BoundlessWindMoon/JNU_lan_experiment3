@@ -1,6 +1,5 @@
-#include <hip/hip_runtime.h>
-#include <hip/hip_ext.h>
-#include <hip/hip_fp16.h>  
+#include <cuda_runtime.h>
+#include <cuda_fp16.h> 
 #include "conv2d.h"
 
 extern "C" __global__ void implicit_gemm(mykernelParamType param)
@@ -231,25 +230,25 @@ extern "C" __global__ void implicit_gemm(mykernelParamType param)
             output_offset = z * param.Oh * param.Ow * param.k + (y + i) * param.Oh * param.Ow + x + j;
             if ((x + j) < param.Ow * param.Oh && (y + i) < param.k)
             {
-                param.pout[output_offset] = (_Float16)output_temp[i][j];
+                param.pout[output_offset] = output_temp[i][j];
             }
 
             output_offset = z * param.Oh * param.Ow * param.k + (y + i) * param.Oh * param.Ow + x + j + 32;
             if ((x + j + 32) < param.Ow * param.Oh && (y + i) < param.k)
             {
-                param.pout[output_offset] = (_Float16)output_temp[i][j + 4];
+                param.pout[output_offset] = output_temp[i][j + 4];
             }
 
             output_offset = z * param.Oh * param.Ow * param.k + (y + i + 16) * param.Oh * param.Ow + x + j;
             if ((x + j) < param.Ow * param.Oh && (y + i + 16) < param.k)
             {
-                param.pout[output_offset] = (_Float16)output_temp[i + 4][j];
+                param.pout[output_offset] = output_temp[i + 4][j];
             }
 
             output_offset = z * param.Oh * param.Ow * param.k + (y + i + 16) * param.Oh * param.Ow + x + j + 32;
             if ((x + j + 32) < param.Ow * param.Oh && (y + i + 16) < param.k)
             {
-                param.pout[output_offset] = (_Float16)output_temp[i + 4][j + 4];
+                param.pout[output_offset] = output_temp[i + 4][j + 4];
             }
         }
     }

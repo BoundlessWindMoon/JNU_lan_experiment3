@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
-#include "hip/hip_runtime.h"
-// #include <hip/hip_ext.h>
+#include "cuda_runtime.h"
+// #include <cuda/cuda_ext.h>
 #include "verfiy.h"
 #include "conv2d.h"
 
@@ -22,25 +22,23 @@ int main(int argc, char **argv)
     int outw = (w - s + 2 * q) / v + 1;
 
 
-    _Float16 *pIn = (_Float16 *)malloc(n * c * h * w * sizeof(_Float16));
-    _Float16 *pWeight = (_Float16 *)malloc(k * c * r * s * sizeof(_Float16));
-    _Float16 *pOut = (_Float16 *)malloc(n * k * outh * outw * sizeof(_Float16));
-    _Float16 *pOut_host = (_Float16 *)malloc(n * k * outh * outw * sizeof(_Float16));
-    _Float16 *pIn_device, *pWeight_device, *pOut_device;
-    hipMalloc((void **)&pIn_device, n * c * h * w * sizeof(_Float16));
-    hipMalloc((void **)&pWeight_device, k * c * r * s * sizeof(_Float16));
-    hipMalloc((void **)&pOut_device, n * k * outh * outw * sizeof(_Float16));
+    float *pIn = (float *)malloc(n * c * h * w * sizeof(float));
+    float *pWeight = (float *)malloc(k * c * r * s * sizeof(float));
+    float *pOut = (float *)malloc(n * k * outh * outw * sizeof(float));
+    float *pOut_host = (float *)malloc(n * k * outh * outw * sizeof(float));
+    float *pIn_device, *pWeight_device, *pOut_device;
+    cudaMalloc((void **)&pIn_device, n * c * h * w * sizeof(float));
+    cudaMalloc((void **)&pWeight_device, k * c * r * s * sizeof(float));
+    cudaMalloc((void **)&pOut_device, n * k * outh * outw * sizeof(float));
 
     for (int i = 0; i < n * c * h * w; i++)
     {
         pIn[i] = (rand() % 255) / 255.0;
-        // pIn[i] = 1.0;
     }
 
     for (int i = 0; i < k * c * r * s; i++)
     {
         pWeight[i] = (rand() % 255) / 255.0;
-        // pWeight[i] = 1.0;
     }
 
     for (int i = 0; i < n * k * outh * outw; i++)
@@ -48,9 +46,9 @@ int main(int argc, char **argv)
         pOut[i] = 0.0;
         pOut_host[i] = 0.0;
     }
-    hipMemcpy(pIn_device, pIn, n * c * h * w * sizeof(_Float16), hipMemcpyHostToDevice);
-    hipMemcpy(pWeight_device, pWeight, k * c * r * s * sizeof(_Float16), hipMemcpyHostToDevice);
-    hipMemcpy(pOut_device, pOut, n * k * outh * outw * sizeof(_Float16), hipMemcpyHostToDevice);
+    cudaMemcpy(pIn_device, pIn, n * c * h * w * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(pWeight_device, pWeight, k * c * r * s * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(pOut_device, pOut, n * k * outh * outw * sizeof(float), cudaMemcpyHostToDevice);
     /********************step 1*****************************/
 
     problem_t problem;
@@ -75,7 +73,7 @@ int main(int argc, char **argv)
     
     /**********************************step 2****************************/
     getParamsize(&problem, &paramSize);
-    printf("paramsize:%d\n", paramSize);
+    printf("\nparamsize:%d\n", paramSize);
     void *param = malloc(paramSize);
 
     getkernelInfo(&problem, &kernelInfo, param);
@@ -83,34 +81,35 @@ int main(int argc, char **argv)
 
     current_plan.conv_init((mykernelParamType *)param);
     current_plan.conv_run((mykernelParamType *)param);
-    hipMemcpy(pOut_host, pOut_device, n * k * outh * outw * sizeof(_Float16), hipMemcpyDeviceToHost);
+    cudaMemcpy(pOut_host, pOut_device, n * k * outh * outw * sizeof(float), cudaMemcpyDeviceToHost);
 
     /*******************************cost time test************************************/
+    float time_elapsed_optim = 0.0;
+    float time_elapsed_baseline = 0.0;
 
-    hipEvent_t start, stop;
-    hipEventCreate(&start);
-    hipEventCreate(&stop);
-    hipEventRecord(start, 0);
-    float time_elapsed = 0.0;
-
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
     int iternum = 100;
     for (int i = 0; i < iternum; i++)
     {
         // convolutionForward((mykernelParamType *)param); 
         current_plan.conv_run((mykernelParamType *)param);
     }
-    hipEventRecord(stop, 0);
-
-    hipEventSynchronize(stop);
-    hipEventElapsedTime(&time_elapsed, start, stop);
-
-    printf("time: %f us\n", time_elapsed * 1000 / iternum);
-    hipEventDestroy(start);
-    hipEventDestroy(stop);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time_elapsed_optim, start, stop);
+    printf("time: %f us\n", time_elapsed_optim * 1000 / iternum);
+    
 
 #ifndef TEST
-    printf("===================start verfiy===================\n");
+    printf("===============start verfiy=====================\n");
+    cudaEventRecord(start, 0);
     conv2dcpu(pIn, pWeight, pOut, n, c, h, w, k, r, s, u, v, p, q);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time_elapsed_baseline, start, stop);
 
     int error = 0;
     for (int i = 0; i < n * k * outh * outw; i++)
@@ -123,12 +122,16 @@ int main(int argc, char **argv)
             break;
         }
     }
-    printf("================finish,error:%d=========================\n", error);
-#endif
 
-    hipFree(pIn_device);
-    hipFree(pWeight_device);
-    hipFree(pOut_device);
+    printf("error = %d\n", error); 
+    float score = get_score(error, time_elapsed_optim, time_elapsed_baseline);
+    printf("score = %.1f\n", score);
+    
+    printf("===============finish verfiy====================\n");
+#endif
+    cudaFree(pIn_device);
+    cudaFree(pWeight_device);
+    cudaFree(pOut_device);
 
     free(pIn);
     free(pWeight);

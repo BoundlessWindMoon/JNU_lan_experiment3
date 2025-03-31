@@ -1,7 +1,8 @@
 #ifndef __CONV2D_FP16_FWD_HEADER__
 #define __CONV2D_FP16_FWD_HEADER__
-#include <hip/hip_ext.h>
-#include <hip/hip_fp16.h>
+// #include <cuda_fp16.h>
+#include <cuda_runtime.h>
+#include <stdint.h>
 #define __in__
 #define __out__
 #define __in_out__
@@ -27,12 +28,12 @@
 
 typedef struct
 {
-    _Float16*   pweight_trans;
-    _Float16*   data_col_device;
-    _Float16*   output_gemm_device;
-    _Float16*   in;                             //输入数据地址
-    _Float16*   weight;                         //权值数据地址
-    _Float16*   out;                            //输出数据地址
+    float*   pweight_trans;
+    float*   data_col_device;
+    float*   output_gemm_device;
+    float*   in;                             //输入数据地址
+    float*   weight;                         //权值数据地址
+    float*   out;                            //输出数据地址
     unsigned int      n;                              //batch szie              default value 1
     unsigned int      c;                              //channel number          default value 32
     unsigned int      h;                              //数据高                  default value 32
@@ -74,12 +75,12 @@ typedef struct
 
 typedef struct mykernelParamType
 {
-    _Float16*         pweight_trans;
-    _Float16*         data_col_device;                       
-    _Float16*         output_gemm_device;
-    _Float16*         pin;                            //输入数据地址
-    _Float16*         pout;                           //输出数据地址
-    _Float16*         pweight;                        //权值数据地址
+    float*         pweight_trans;
+    float*         data_col_device;                       
+    float*         output_gemm_device;
+    float*         pin;                            //输入数据地址
+    float*         pout;                           //输出数据地址
+    float*         pweight;                        //权值数据地址
     unsigned int      n;                              //batch szie            
     unsigned int      c;                              //channel number        
     unsigned int      h;                              //数据高                
@@ -93,8 +94,6 @@ typedef struct mykernelParamType
     unsigned int      q;                              //卷积在宽方向上的补边  
     unsigned int      Oh;                             //卷积在高方向上输出大小    
     unsigned int      Ow;                             //卷积在宽方向上输出大小
-    unsigned int      expand_row;                     //im2col 在行方向展开的次数
-    unsigned int      expand_col;                     //im2col 在列方向展开的次数
     unsigned int      revs6;                          //预留
     unsigned int      revs7;                          //预留
 }mykernelParamType; 
@@ -135,47 +134,30 @@ typedef struct convParamType
                             (ref.q == in.q)
 
 
-typedef _Float16 _Float16_8 __attribute__((ext_vector_type(8)));
-typedef _Float16 _Float16_4 __attribute__((ext_vector_type(4)));
+// typedef _Float16 _Float16_8 __attribute__((ext_vector_type(8)));
+// typedef _Float16 _Float16_4 __attribute__((ext_vector_type(4)));
 typedef float float4_ __attribute__((ext_vector_type(4)));
 
-union RegisterUnion
-{
-  _Float16_8 vector8;
-  struct
-  {
-    _Float16_4 vector_front;
-    _Float16_4 vector_rear;
-  };
-};
+// union RegisterUnion
+// {
+//   _Float16_8 vector8;
+//   struct
+//   {
+//     _Float16_4 vector_front;
+//     _Float16_4 vector_rear;
+//   };
+// };
 
 convPlanType scheduler(problem_t *problem, mykernelParamType * param);
 
 int getParamsize(__in__ problem_t* problem, __out__ int* paramSize);
 
 int getkernelInfo(__in__ problem_t* problem, __out__  kernelInfo_t* kernelInfo, __in_out__ void* param);
-
-void launch_reshape_2D_kernel(const _Float16* output_gemm_device, _Float16* output_gemm_device_rearrange,
-                 int n, int k, int output_h, int output_w,
-                 int expand_row, int expand_col);
-
-void launch_im2col_2D_kernel(const _Float16* data_im_device, 
-                        int n, int channels, int height, int width, int kernel_h, int kernel_w, int output_h, int output_w,
-                        int expand_row, int expand_col,
-                        _Float16* data_col_device);                
-                 
+                   
 void launch_implicit_gemm(unsigned int outh, unsigned int outw, unsigned int k, unsigned int n, mykernelParamType* param);
 
 extern "C" __global__ void directConvolution(mykernelParamType param) __attribute__((amdgpu_flat_work_group_size(1,256)));
-
-void launch_gemm_128x128x8_fp32(__half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C, const int M, const int N, const int K);
-
-
-void launch_gemm_64x64x8_fp32(  __half * __restrict__ A, __half * __restrict__ B, __half * __restrict__ C,
-    const int M, const int N, const int K);
     
+void launch_transpose_kernel(float* A, float* At, int M, int K);
 
-void launch_transpose_kernel(_Float16* A, _Float16* At, int M, int K);
-
-void launch_gemm_32x32x16_fp16(mykernelParamType *param, int expand_row, int expand_col);
 #endif

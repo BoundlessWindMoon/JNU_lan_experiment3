@@ -2,7 +2,7 @@
 #define __VERFIY_HEADER__
 
 
-void conv2dcpu(_Float16* pin, _Float16* pwei, _Float16* pout, int n, int c, int h, int w, int k, int r, int s, int u, int v,  int p, int q)
+void conv2dcpu(float* pin, float* pwei, float* pout, int n, int c, int h, int w, int k, int r, int s, int u, int v,  int p, int q)
 {
     int oh = (h + 2*p - r)/u + 1;
     int ow = (w + 2*q - s)/v + 1;
@@ -35,10 +35,21 @@ void conv2dcpu(_Float16* pin, _Float16* pwei, _Float16* pout, int n, int c, int 
                         }
                     }
 
-                    pout[nNum*k*oh*ow + kNum*oh*ow + i*ow + j] = (_Float16)sum;
+                    pout[nNum*k*oh*ow + kNum*oh*ow + i*ow + j] = sum;
                 }
             }
         }
     }
+}
+
+float get_score(int error, float time_elapsed_optim, float time_elapsed_baseline) {
+    if(error != 0) 
+        return 0;
+
+    int accuracy_weight = 40;
+    int time_weight = 15;
+    float normalized_time = time_elapsed_baseline / time_elapsed_optim;
+    float final_score = accuracy_weight * 1 + time_weight * normalized_time;
+    return final_score;
 }
 #endif

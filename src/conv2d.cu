@@ -1,6 +1,5 @@
-#include <hip/hip_runtime.h>
-#include <hip/hip_ext.h>
-#include <hip/hip_fp16.h>
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
 #include "conv2d.h"
 
 /*选手需要返回自定义kernel入参结构体的size*/
